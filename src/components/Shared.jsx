@@ -106,7 +106,14 @@ export function SearchStatus({ status = {} }) {
     OK: "특허 후보 수집을 완료했습니다. 해결안과의 적용성 검토 결과는 해결안과 보고서에서 확인할 수 있습니다.",
   };
   if (!messages[status.patent_status]) return null;
-  return <div className="panel search-status"><h3>특허 검색 상태</h3><p>{messages[status.patent_status]}</p>
+  const reasons = status.patent_error_reasons || [];
+  const detail = reasons.some(r => ["QUERY_BUDGET_EXCEEDED", "MONTHLY_BUDGET_EXCEEDED"].includes(r))
+    ? "BigQuery 조회량 상한에 도달해 검색을 중단했습니다. 검색 결과가 0건이라는 의미는 아닙니다."
+    : reasons.some(r => ["NOT_CONFIGURED", "INVALID_CREDENTIALS", "AUTHENTICATION_FAILED", "ACCESS_DENIED_OR_QUOTA"].includes(r))
+      ? "BigQuery 인증·권한 또는 사용 할당량을 확인해야 합니다. 특허 조회를 완료하지 못했습니다."
+      : messages[status.patent_status];
+  return <div className="panel search-status"><h3>특허 검색 상태</h3><p>{detail}</p>
+    {status.patent_search && <p>{status.patent_search}</p>}
     <p>검색어 {status.patent_queries || 0}개 · 확보한 후보 {status.patent_records || 0}건</p></div>;
 }
 
