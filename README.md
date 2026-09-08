@@ -2,6 +2,9 @@
 
 React 19 / Vite / Lucide. Backend: https://github.com/equipment0226/triz_backend
 
+운영: https://trizfront-production.up.railway.app
+Railway의 `triz_front` 서비스는 이 저장소의 main 브랜치에 연결되어 있다.
+
 ```sh
 npm ci
 npm run dev
