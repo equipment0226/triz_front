@@ -1,0 +1,210 @@
+import { test, expect } from "@playwright/test";
+const stages = [
+  { key: "s0_bootstrap", label: "실행 계획", index: 0 },
+  { key: "s0_research", label: "산업·기술 심층 검토", index: 1 },
+];
+const run = {
+  run_id: "run-test",
+  title: "반도체 세정 성능과 패턴 손상",
+  industry: "반도체",
+  system: "웨이퍼 세정",
+  query: "패턴 손상",
+  status: "WAITING_HUMAN",
+  stage_index: 1,
+  stages,
+  guide: "패턴의 치수를 함께 확인할게요.",
+  problem: "세정 성능과 패턴 손상",
+  constraints: ["패턴 손상 최소화"],
+  reviewers: [],
+  solutions: [],
+  figures: [],
+  report_ready: false,
+  summary: "",
+  additions: [],
+  evidence_gaps: [],
+  search_status: {},
+  pending: {
+    interrupt_id: "internal-test-id",
+    kind: "CLARIFY",
+    title: "분석 조건을 알려 주세요",
+    payload: {
+      questions: [
+        {
+          question: "패턴 치수는 얼마인가요?",
+          why_needed: "스케일별 작용 검토",
+        },
+      ],
+    },
+  },
+};
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/runs", (route) =>
+    route.fulfill({
+      json: [
+        {
+          run_id: "run-test",
+          title: run.title,
+          industry: "반도체",
+          target_system: "웨이퍼 세정",
+          status: "WAITING_HUMAN",
+          started_at: "2026-09-08",
+        },
+      ],
+    }),
+  );
+  await page.route("**/api/runs/run-test/view", (route) =>
+    route.fulfill({ json: run }),
+  );
+});
+test("desktop landing, five pages and original illustration", async ({
+  page,
+}) => {
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: /풀리지 않던 문제/ }),
+  ).toBeVisible();
+  await expect(page.getByRole("img", { name: /TRIZ 개념도/ })).toBeVisible();
+  await page.screenshot({
+    path: "test-results/landing-desktop.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Tool 소개", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: /TRIZ를 몰라도/ }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "About us", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "About us" })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+test("new project submits query and attachment and displays human questions", async ({
+  page,
+}) => {
+  let submitted = false;
+  await page.route("**/api/runs", async (route) => {
+    if (route.request().method() === "POST") {
+      submitted = route.request().postData().includes("웨이퍼");
+      await route.fulfill({ json: { run_id: "run-test" } });
+    } else await route.fulfill({ json: [] });
+  });
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Problem Solving", exact: true })
+    .click();
+  await page
+    .getByLabel("해결하고 싶은 문제")
+    .fill("웨이퍼 세정과 패턴 손상 문제");
+  await page
+    .locator("input[type=file]")
+    .setInputFiles({
+      name: "measurement.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from("pressure,20 MPa"),
+    });
+  await page.getByRole("button", { name: "AI와 문제 분석 시작" }).click();
+  await expect(page.getByLabel("패턴 치수는 얼마인가요?")).toBeVisible();
+  expect(submitted).toBe(true);
+  await expect(page.locator("body")).not.toContainText("internal-test-id");
+});
+test("history opens real run and resumes with answer", async ({ page }) => {
+  let answer;
+  await page.route("**/api/runs/run-test/resume", async (route) => {
+    answer = route.request().postDataJSON().payload;
+    await route.fulfill({ json: { ok: true } });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Sample Case", exact: true }).click();
+  await page
+    .getByRole("button", { name: /반도체 세정 성능과 패턴 손상/ })
+    .click();
+  await page.getByLabel("패턴 치수는 얼마인가요?").fill("20nm");
+  await page.getByRole("button", { name: "답변 전달하고 계속" }).click();
+  await expect.poll(() => answer?.answers?.[0]).toBe("20nm");
+  expect(answer.interrupt_id).toBe("internal-test-id");
+});
+test("mobile layout stays within viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: /풀리지 않던 문제/ }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await page
+    .getByRole("button", { name: "Problem Solving", exact: true })
+    .click();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: "test-results/intake-mobile.png",
+    fullPage: true,
+  });
+});
+test("solutions render actual SVG, evidence gaps and portable report downloads", async ({
+  page,
+}) => {
+  await page.route("**/api/runs/run-test/view", (route) =>
+    route.fulfill({
+      json: {
+        ...run,
+        report_ready: true,
+        pending: null,
+        status: "COMPLETED",
+        figures: [
+          {
+            key: "sufield",
+            title: "물질–장 분석",
+            svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100"><text x="20" y="40">S1 · 웨이퍼</text></svg>',
+          },
+        ],
+        solutions: [
+          {
+            key: "CPT-hidden-id",
+            title: "시간 분리 세정",
+            summary: "세정과 지지 분리",
+            description: "세정 작용을 시간에 따라 분리합니다.",
+            mechanism: "시간 분리",
+            effect: "가정 검증 필요",
+            assumptions: [],
+            transfer_conditions: [],
+            risks: [],
+            validation: [],
+            score: 3.8,
+            rank: 1,
+            verdict: "조건 확인 필요",
+            dimensions: { QUALITY: 4 },
+            evidence: [
+              {
+                kind: "특허",
+                title: "Reference patent",
+                url: "https://patents.google.com/patent/US1234567",
+              },
+            ],
+          },
+        ],
+        evidence_gaps: [{ title: "시간 분리 세정", missing: ["PAPER"] }],
+      },
+    }),
+  );
+  await page.goto("/");
+  await page.getByRole("button", { name: "Sample Case", exact: true }).click();
+  await page.getByRole("button", { name: /반도체 세정/ }).click();
+  await page.getByRole("button", { name: "분석 도식", exact: true }).click();
+  await expect(page.locator("figure svg")).toBeVisible();
+  await page.getByRole("button", { name: "보고서", exact: true }).click();
+  await expect(
+    page.getByRole("link", { name: "보고서 다운로드", exact: true }),
+  ).toHaveAttribute("href", "/api/runs/run-test/report?format=html");
+  await expect(
+    page.getByText("논문 근거를 아직 확보하지 못했습니다."),
+  ).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("CPT-hidden-id");
+});
