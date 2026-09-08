@@ -82,9 +82,19 @@ export function Figure({ figure }) {
 export function ReportSections({ sections = [] }) {
   return <div className="report-process">{sections.map(section => <section className="panel report-section" key={section.key}>
     <h2>{section.title}</h2>
-    <div className="report-prose" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(section.html) }} />
-    {section.figures.map(f => <Figure key={f.key} figure={f} />)}
+    {(section.blocks || [{ type: "html", html: section.html || "" }, ...(section.figures || []).map(figure => ({ type: "figure", figure }))]).map((block, i) =>
+      block.type === "figure" ? <Figure key={block.figure.key} figure={block.figure} /> :
+        <div className="report-prose" key={i} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.html) }} />)}
   </section>)}</div>;
+}
+
+export function ReferenceCard({ reference: r }) {
+  return <article className="reference-card">
+    {r.status && <p className="reference-status">{r.status}</p>}
+    <SafeLink className="reference-title" href={r.url}><span className="reference-kind">{r.kind}</span> {r.title} ↗</SafeLink>
+    {r.description && <p className="reference-description">{r.description}</p>}
+    {(r.identifier || r.scope) && <p className="reference-meta">{[r.identifier, r.scope].filter(Boolean).join(" · ")}</p>}
+  </article>;
 }
 
 export function HeroArt() {

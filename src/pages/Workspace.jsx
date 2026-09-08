@@ -25,7 +25,7 @@ import {
   Send,
 } from "lucide-react";
 import { api, post } from "../lib/api";
-import { SafeLink, Bot, Figure, Empty, ReportSections } from "../components/Shared";
+import { SafeLink, Bot, Empty, ReportSections, ReferenceCard } from "../components/Shared";
 const icons = [
   FlaskConical,
   Layers3,
@@ -323,7 +323,7 @@ export function Workspace({ selected, seed, onCreated, onError }) {
             )}
           </div>
           <div className="tabs">
-            {["분석 현황", "분석 도식", "해결안", "보고서"].map((t) => (
+            {["분석 현황", "해결안", "보고서", "피드백"].map((t) => (
               <button
                 key={t}
                 className={tab === t ? "active" : ""}
@@ -472,16 +472,6 @@ export function Workspace({ selected, seed, onCreated, onError }) {
               </div>
             </>
           )}
-          {tab === "분석 도식" &&
-            (view.figures.length ? (
-              <div className="figures">
-                {view.figures.map((f) => (
-                  <Figure key={f.key} figure={f} />
-                ))}
-              </div>
-            ) : (
-              <Empty text="시스템 분석이 진행되면 기능과 원인의 관계가 이곳에 그려집니다." />
-            ))}
           {tab === "해결안" && <Solutions view={view} />}
           {tab === "보고서" &&
             (view.report_ready ? (
@@ -505,16 +495,11 @@ export function Workspace({ selected, seed, onCreated, onError }) {
                   </p>
                 </div>
                 <ReportSections sections={view.report_sections} />
-                <Solutions view={view} />
-                <Feedback
-                  solutions={view.solutions}
-                  submit={(payload) => act("feedback", payload)}
-                  busy={busy}
-                />
               </>
             ) : (
               <Empty text="분석과 검토를 마치면 도식과 근거를 담은 보고서가 완성됩니다." />
             ))}
+          {tab === "피드백" && (view.report_ready ? <Feedback solutions={view.solutions} submit={payload => act("feedback", payload)} busy={busy} /> : <Empty text="분석과 보고서가 완성되면 해결안을 평가할 수 있습니다." />)}
         </div>
       </div>
     </div>
@@ -537,7 +522,7 @@ function HumanInput({ pending, busy, submit }) {
     return (
       <div className="panel question-panel">
         <h3>보고서가 준비되었어요</h3>
-        <p>보고서 탭에서 해결안을 검토하고 의견을 남겨 주세요.</p>
+        <p>보고서 탭에서 결과를 검토하고, 피드백 탭에서 의견을 남겨 주세요.</p>
         <button
           className="button subtle"
           disabled={busy}
@@ -695,6 +680,13 @@ function HumanInput({ pending, busy, submit }) {
   );
 }
 
+function solutionReferences(view, c) {
+  return (c.reference_cards || [
+    ...(c.evidence || []).map(r => ({ ...r, description: r.mechanism })),
+    ...(view.related_references || []).filter(r => r.concept_id === c.key).map(r => ({ ...r.reference, description: r.reason, status: r.status })),
+  ]).filter(r => /^https?:\/\//i.test(r.url || ""));
+}
+
 export function Solutions({ view }) {
   if (!view.solutions.length)
     return (
@@ -706,7 +698,7 @@ export function Solutions({ view }) {
         <article className="panel solution-card" key={c.key}>
           <div className="solution-top">
             <span className="solution-number">
-              {String(i + 1).padStart(2, "0")}
+              {c.rank === 99 ? "추가 도출" : String(i + 1).padStart(2, "0")}
             </span>
             <span className="pill">{c.verdict}</span>
             {c.score !== null && (
@@ -795,36 +787,10 @@ export function Solutions({ view }) {
               ))}
             </ul>
           </details>
-          <div className="references">
-            <h4>
-              <BookOpen size={16} /> 관련 특허·논문
-            </h4>
-            {c.evidence.map((r, i) => (
-              <div key={i}>
-              <SafeLink key={i} href={r.url}>
-                <span>{r.kind}</span>
-                {r.title}
-                <ArrowUpRight size={15} />
-              </SafeLink>
-              {r.mechanism && <p className="hint">기능 대응: {r.mechanism}</p>}
-              </div>
-            ))}
-            {(view.related_references || []).filter(r => r.concept_id === c.key).map((r, i) => <div key={i}>
-              <p className="hint">{r.status}</p><SafeLink href={r.reference.url}>{r.reference.title}</SafeLink><p>{r.reason}</p></div>)}
-            {view.evidence_gaps
-              .filter((g) => g.title === c.title)
-              .map((g, i) => (
-                <p className="hint" key={i}>
-                  {g.missing
-                    .map((k) => (k === "PATENT" ? "특허" : "논문"))
-                    .join("·")}{" "}
-                  근거를 아직 확보하지 못했습니다.
-                </p>
-              ))}
-            {!c.evidence.length && !view.evidence_gaps.length && (
-              <p className="hint">관련 자료를 검토하고 있습니다.</p>
-            )}
-          </div>
+          {solutionReferences(view, c).length > 0 && <div className="references">
+            <h4><BookOpen size={16} /> 관련 특허·논문</h4>
+            {solutionReferences(view, c).map((r, i) => <ReferenceCard key={i} reference={r} />)}
+          </div>}
         </article>
       ))}
       {view.additions.length > 0 && (

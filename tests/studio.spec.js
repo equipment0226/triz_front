@@ -154,7 +154,7 @@ test("mobile layout stays within viewport", async ({ page }) => {
     fullPage: true,
   });
 });
-test("solutions render actual SVG, evidence gaps and portable report downloads", async ({
+test("report embeds diagrams, separates feedback and hides missing evidence notices", async ({
   page,
 }) => {
   await page.route("**/api/runs/run-test/view", (route) =>
@@ -164,6 +164,10 @@ test("solutions render actual SVG, evidence gaps and portable report downloads",
         report_ready: true,
         pending: null,
         status: "COMPLETED",
+        report_sections: [{ key: "analysis", title: "2. 시스템 분석", blocks: [
+          { type: "html", html: "<h3>2.3 기능 모델</h3><p>기능 분석 내용이다.</p>" },
+          { type: "figure", figure: { key: "functions", title: "기능 모델", svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100"><text x="20" y="40">웨이퍼</text></svg>' } },
+        ] }],
         figures: [
           {
             key: "sufield",
@@ -184,19 +188,21 @@ test("solutions render actual SVG, evidence gaps and portable report downloads",
             risks: [],
             validation: [],
             score: 3.8,
-            rank: 1,
+            rank: 99,
             verdict: "조건 확인 필요",
             dimensions: { QUALITY: 4 },
             evidence: [
               {
                 kind: "특허",
                 title: "Reference patent",
+                mechanism: "작용 원리를 비교한다.",
                 url: "https://patents.google.com/patent/US1234567",
               },
             ],
           },
         ],
         evidence_gaps: [{ title: "시간 분리 세정", missing: ["PAPER"] }],
+        related_references: [{ concept_id: "CPT-hidden-id", status: "유사 사례", reason: "추가 검토가 필요하다.", reference: { kind: "논문", title: "Related paper", url: "https://example.com/paper" } }],
       },
     }),
   );
@@ -204,16 +210,23 @@ test("solutions render actual SVG, evidence gaps and portable report downloads",
   await page.getByRole("button", { name: "Problem Solving", exact: true }).click();
   await page.getByRole("button", { name: "내 분석 이력", exact: true }).click();
   await page.getByRole("button", { name: /반도체 세정/ }).click();
-  await page.getByRole("button", { name: "분석 도식", exact: true }).click();
-  await expect(page.locator("figure svg")).toBeVisible();
+  await expect(page.getByRole("button", { name: "분석 도식", exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "보고서", exact: true }).click();
+  await expect(page.locator("figure svg")).toBeVisible();
+  await expect(page.locator(".solution-card")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "피드백 저장" })).toHaveCount(0);
   await expect(
     page.getByRole("link", { name: "보고서 다운로드", exact: true }),
   ).toHaveAttribute("href", "/api/runs/run-test/report?format=html");
-  await expect(
-    page.getByText("논문 근거를 아직 확보하지 못했습니다."),
-  ).toBeVisible();
+  await page.getByRole("button", { name: "해결안", exact: true }).click();
+  await expect(page.getByText("추가 도출", { exact: true })).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("근거를 아직 확보하지 못했습니다");
+  await expect(page.locator(".reference-card")).toHaveCount(2);
+  expect(await page.locator(".reference-card").evaluateAll(cards => cards.every(card =>
+    parseFloat(getComputedStyle(card.querySelector('.reference-title')).fontSize) > parseFloat(getComputedStyle(card.querySelector('.reference-description')).fontSize)))).toBe(true);
   await expect(page.locator("body")).not.toContainText("CPT-hidden-id");
+  await page.getByRole("button", { name: "피드백", exact: true }).click();
+  await expect(page.getByRole("button", { name: "피드백 저장" })).toBeVisible();
 });
 
 test("public pages remain accessible and solving requires Google login", async ({ page }) => {
@@ -225,7 +238,8 @@ test("public pages remain accessible and solving requires Google login", async (
   await expect(page.getByRole("heading", { name: "모두의 분석 사례" })).toBeVisible();
   await page.getByRole("button", { name: /반도체 세정 성능과 패턴 손상/ }).click();
   await expect(page.getByText("공개 문제 정의")).toBeVisible();
-  await expect(page.getByRole("link", { name: "보고서 다운로드" })).toHaveAttribute("href", "/api/public/runs/run-test/report");
+  await expect(page.getByRole("link", { name: "보고서 다운로드" })).toHaveCount(0);
+  await expect(page.getByRole("tab", { name: "분석 도식" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "피드백 저장" })).toHaveCount(0);
   await page.getByRole("button", { name: "Problem Solving", exact: true }).click();
   await expect(page.getByRole("link", { name: "Google로 계속하기" })).toHaveAttribute("href", "/auth/google");

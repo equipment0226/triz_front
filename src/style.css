@@ -2122,7 +2122,9 @@ th {
 .google-login{background:#fff;border:1px solid #747775;color:#1f1f1f;margin:20px 0}.google-login b{font:700 22px Arial;color:#4285f4}
 .figure{min-width:0;max-width:100%}.figure-controls{justify-content:flex-end;margin-bottom:8px}.figure-controls button{border:1px solid #cadbd7;border-radius:6px;background:white;padding:6px 12px;cursor:pointer}
 .figure .figure-scroll{overflow:auto;max-height:none;width:100%}.figure svg{display:block;width:100%;height:auto;max-height:none}
-.report-section{margin:20px 0;min-width:0}.report-prose{overflow-wrap:anywhere;line-height:1.8;overflow-x:auto}.report-prose table{border-collapse:collapse;width:100%;min-width:540px;margin:20px 0;table-layout:fixed}
+.report-section{margin:20px 0;min-width:0}.report-prose{overflow-wrap:anywhere;line-height:1.8;overflow-x:auto}.report-prose table{border-collapse:collapse;width:100%;margin:20px 0;table-layout:fixed}
 .report-prose th,.report-prose td{border:1px solid #dde5e1;padding:12px;vertical-align:top;text-align:left;font-size:13px}.report-prose th{background:#eef5f1}
 .report-prose h3{margin-top:30px}.report-prose ul,.report-prose ol{padding-left:24px}.report-prose pre{white-space:pre-wrap}.report-prose a{color:#167261}
+.report-prose .report-matrix th,.report-prose .report-matrix td{padding:8px 4px;text-align:center}.report-prose .report-matrix th:first-child,.report-prose .report-matrix td:first-child{text-align:left}
+.reference-card{margin:22px 0;overflow-wrap:anywhere}.reference-card .reference-title,.solution-card .references .reference-title{display:block;font-size:17px;line-height:1.6;font-weight:500;color:#167261}.reference-card .reference-kind{display:inline-block;font-size:12px;margin-right:6px}.reference-card .reference-description{font-size:13px;line-height:1.8;color:#526b67;margin:10px 0}.reference-card .reference-status,.reference-card .reference-meta{font-size:12px;line-height:1.6;color:#687c76;margin:8px 0}.solution-number{min-width:40px;width:auto;white-space:nowrap}
 @media(max-width:700px){.account-menu span{display:none}.login-card{padding:26px}.workspace-nav{padding:0 20px}}
