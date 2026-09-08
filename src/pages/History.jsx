@@ -35,16 +35,16 @@ const statusLabel = {
   FAILED: "재시도 필요",
   INTERRUPTED: "일시 중단",
 };
-export function History({ openRun, onError }) {
+export function History({ openRun, onError, publicView = false }) {
   const [runs, setRuns] = useState([]),
     [search, setSearch] = useState(""),
     [loading, setLoading] = useState(true);
   useEffect(() => {
-    api("/runs")
+    api(publicView ? "/public/runs" : "/runs")
       .then(setRuns)
       .catch((e) => onError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [publicView]);
   const filtered = runs.filter((r) =>
     (r.title + " " + r.industry + " " + r.target_system)
       .toLowerCase()
@@ -54,10 +54,10 @@ export function History({ openRun, onError }) {
     <div className="section history">
       <div className="section-top">
         <div>
-          <p className="eyebrow">MY PROJECTS</p>
-          <h1>내 분석 이력</h1>
+          <p className="eyebrow">{publicView ? "SAMPLE CASE · OPEN BETA" : "MY PROJECTS"}</p>
+          <h1>{publicView ? "모두의 분석 사례" : "내 분석 이력"}</h1>
           <p className="lead">
-            분석 과정과 보고서를 다시 살펴보고, 다음 가능성을 발견하세요.
+            {publicView ? "무료 베타 기간에는 모든 회원의 분석 과정과 보고서를 로그인 없이 살펴볼 수 있습니다." : "분석 과정과 보고서를 다시 살펴보고, 다음 가능성을 발견하세요."}
           </p>
         </div>
         <span className="library-count">

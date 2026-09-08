@@ -27,6 +27,8 @@ test("production gateway authenticates, streams API requests, and isolates inter
     const headers = { Cookie: "triz_session=fixture-session" };
     assert.equal((await fetch(base + "/healthz")).status, 200);
     assert.equal((await fetch(base + "/api/runs")).status, 401);
+    assert.equal((await fetch(base + "/api/public/runs")).status, 201);
+    assert.equal((await fetch(base + "/api/public/runs", { method: "POST" })).status, 401);
     assert.equal((await fetch(base + "/")).status, 200);
     assert.equal((await fetch(base + "/auth/session")).status, 200);
     assert.equal((await fetch(base + "/auth/google")).status, 503);

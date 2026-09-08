@@ -13,7 +13,7 @@ export function Login({ auth, seed }) {
         <a className="button google-login" href="/auth/google" onClick={remember}><b aria-hidden="true">G</b> Google로 계속하기</a> :
         <p role="status">Google 로그인 연결을 준비하고 있습니다. 잠시 후 다시 방문해 주세요.</p>}
       {new URLSearchParams(location.search).has("login_error") && <p role="alert">로그인을 완료하지 못했습니다. 다시 시도해 주세요.</p>}
-      <p className="hint">로그인에는 이름과 이메일을 사용합니다. 소개와 입력 예시는 로그인 없이 둘러볼 수 있습니다.</p>
+      <p className="hint">로그인에는 이름과 이메일을 사용합니다. 무료 베타의 모든 분석 사례와 보고서는 로그인 없이 볼 수 있습니다.</p>
     </div>
   </section>;
 }

@@ -35,7 +35,8 @@ const server = http.createServer(async (req, res) => {
     if (await handleAuth(req, res, backend, appToken)) return;
     if (pathname === "/api" || pathname.startsWith("/api/")) {
       const session = cookie(req, sessionCookie);
-      if (!session) {
+      const publicRead = ["GET", "HEAD"].includes(req.method) && pathname.startsWith("/api/public/");
+      if (!session && !publicRead) {
         res.writeHead(401, { "Content-Type": "application/json", "Cache-Control": "no-store" });
         return res.end(JSON.stringify({ detail: "Google 로그인 후 사용할 수 있습니다." }));
       }

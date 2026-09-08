@@ -28,7 +28,8 @@ import { Brand } from "./components/Shared";
 import { Home, Introduction } from "./pages/Marketing";
 import { Workspace } from "./pages/Workspace";
 import { History } from "./pages/History";
-import { Login, Samples } from "./pages/Account";
+import { Login } from "./pages/Account";
+import { CaseStudy } from "./pages/CaseStudy";
 const nav = [
   "Main",
   "Tool 소개",
@@ -40,6 +41,7 @@ export default function App() {
   const [page, setPage] = useState(new URLSearchParams(location.search).get("page") === "solve" ? "Problem Solving" : "Main");
   const [auth, setAuth] = useState({ loading: true, user: null, configured: false });
   const [library, setLibrary] = useState(false);
+  const [publicRun, setPublicRun] = useState(null);
   const [selected, setSelected] = useState(null);
   const [seed, setSeed] = useState(() => sessionStorage.getItem("triz-draft") || "");
   const [error, setError] = useState("");
@@ -87,6 +89,7 @@ export default function App() {
               onClick={() => {
                 setPage(item);
                 setError("");
+                if (item === "Sample Case") setPublicRun(null);
               }}
               className={page === item ? "active" : ""}
             >
@@ -124,7 +127,8 @@ export default function App() {
           />
           }</>
         ) : page === "Sample Case" ? (
-          <Samples solve={solve} />
+          publicRun ? <CaseStudy key={publicRun} runId={publicRun} back={() => setPublicRun(null)} solve={solve} /> :
+            <History publicView openRun={setPublicRun} onError={setError} />
         ) : (
           <div className="about">
             <p className="eyebrow">ABOUT US</p>

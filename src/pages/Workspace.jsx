@@ -47,6 +47,7 @@ function Intake({ seed, onCreated, onError }) {
   const [query, setQuery] = useState(seed),
     [mode, setMode] = useState("FULL"),
     [files, setFiles] = useState([]),
+    [publicConsent, setPublicConsent] = useState(false),
     [busy, setBusy] = useState(false);
   const fileRef = useRef();
   async function submit(e) {
@@ -56,6 +57,7 @@ function Intake({ seed, onCreated, onError }) {
       const data = new FormData();
       data.append("query", query);
       data.append("mode", mode);
+      data.append("public_consent", String(publicConsent));
       files.forEach((f) => data.append("files", f));
       const res = await api("/runs", { method: "POST", body: data });
       onCreated(res.run_id);
@@ -137,6 +139,7 @@ function Intake({ seed, onCreated, onError }) {
             </div>
           )}
           <p className="hint">
+            무료 베타 기간에 제출한 문제와 분석 결과는 Sample Case에 공개됩니다.
             사양서, 공정 데이터, 도면을 함께 주시면 분석이 더 구체적이 됩니다.
             PDF·Excel·이미지, 파일당 25MB까지.
           </p>
@@ -162,8 +165,10 @@ function Intake({ seed, onCreated, onError }) {
               ))}
             </div>
           </fieldset>
+          <label className="public-consent"><input type="checkbox" required checked={publicConsent} onChange={e => setPublicConsent(e.target.checked)} />
+            무료 베타에서 입력한 문제·자료의 분석 내용·해결안·보고서가 Sample Case를 통해 비회원에게도 공개되는 데 동의합니다.</label>
           <button
-            disabled={busy || !query.trim()}
+            disabled={busy || !query.trim() || !publicConsent}
             className="button dark full"
             type="submit"
           >
@@ -690,7 +695,7 @@ function HumanInput({ pending, busy, submit }) {
   );
 }
 
-function Solutions({ view }) {
+export function Solutions({ view }) {
   if (!view.solutions.length)
     return (
       <Empty text="모순을 분석한 뒤 실행 가능한 해결안을 이곳에 정리할게요." />

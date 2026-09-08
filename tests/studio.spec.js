@@ -38,6 +38,9 @@ const run = {
   },
 };
 test.beforeEach(async ({ page }) => {
+  await page.route("**/api/public/runs", route => route.fulfill({ json: [{ run_id: "run-test", title: run.title, industry: "반도체", status: "COMPLETED" }] }));
+  await page.route("**/api/public/runs/run-test/view", route => route.fulfill({ json: { ...run, pending: null, report_ready: true,
+    report_sections: [{key:"definition",title:"1. 문제 정의",html:"<p>공개 문제 정의</p>",figures:[]}] } }));
   await page.route("**/auth/session", route => route.fulfill({ json: { configured: true, user: { name: "Fixture" } } }));
   await page.route("**/api/runs", (route) =>
     route.fulfill({
@@ -104,6 +107,7 @@ test("new project submits query and attachment and displays human questions", as
       mimeType: "text/csv",
       buffer: Buffer.from("pressure,20 MPa"),
     });
+  await page.getByRole("checkbox", { name: /비회원에게도 공개/ }).check();
   await page.getByRole("button", { name: "AI와 문제 분석 시작" }).click();
   await expect(page.getByLabel("패턴 치수는 얼마인가요?")).toBeVisible();
   expect(submitted).toBe(true);
@@ -218,7 +222,11 @@ test("public pages remain accessible and solving requires Google login", async (
   await expect(page.getByRole("button", { name: "Main", exact: true })).toBeVisible();
   await expect(page.locator("body")).not.toContainText("SAMSUNG");
   await page.getByRole("button", { name: "Sample Case", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "이런 문제에서 시작해 보세요" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "모두의 분석 사례" })).toBeVisible();
+  await page.getByRole("button", { name: /반도체 세정 성능과 패턴 손상/ }).click();
+  await expect(page.getByText("공개 문제 정의")).toBeVisible();
+  await expect(page.getByRole("link", { name: "보고서 다운로드" })).toHaveAttribute("href", "/api/public/runs/run-test/report");
+  await expect(page.getByRole("button", { name: "피드백 저장" })).toHaveCount(0);
   await page.getByRole("button", { name: "Problem Solving", exact: true }).click();
   await expect(page.getByRole("link", { name: "Google로 계속하기" })).toHaveAttribute("href", "/auth/google");
   await expect(page.getByLabel("해결하고 싶은 문제")).toHaveCount(0);
