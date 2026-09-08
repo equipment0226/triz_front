@@ -25,7 +25,7 @@ import {
   Send,
 } from "lucide-react";
 import { api, post } from "../lib/api";
-import { SafeLink, Bot, Empty, ReportSections, ReferenceCard } from "../components/Shared";
+import { SafeLink, Bot, Empty, ReportSections, ReferenceCard, SearchStatus } from "../components/Shared";
 const icons = [
   FlaskConical,
   Layers3,
@@ -335,6 +335,7 @@ export function Workspace({ selected, seed, onCreated, onError }) {
           </div>
           {tab === "분석 현황" && (
             <>
+              <SearchStatus status={view.search_status} />
               {view.pending && (
                 <HumanInput
                   key={view.pending.interrupt_id}
@@ -834,7 +835,7 @@ function Feedback({ solutions, submit, busy }) {
         setSaved(success !== false);
       }}
     >
-      <h3>현장의 의견이 다음 분석을 더 깊게 만듭니다</h3>
+      <h3>사용자의 의견이 다음 분석을 더 깊게 만듭니다</h3>
       {solutions.map((c) => (
         <div className="feedback-row" key={c.key}>
           <label>

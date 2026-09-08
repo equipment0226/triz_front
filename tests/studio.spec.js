@@ -40,6 +40,7 @@ const run = {
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/public/runs", route => route.fulfill({ json: [{ run_id: "run-test", title: run.title, industry: "반도체", status: "COMPLETED" }] }));
   await page.route("**/api/public/runs/run-test/view", route => route.fulfill({ json: { ...run, pending: null, report_ready: true,
+    search_status: {patent_status:"UNAVAILABLE",patent_queries:12,patent_records:0},
     report_sections: [{key:"definition",title:"1. 문제 정의",html:"<p>공개 문제 정의</p>",figures:[]}] } }));
   await page.route("**/auth/session", route => route.fulfill({ json: { configured: true, user: { name: "Fixture" } } }));
   await page.route("**/api/runs", (route) =>
@@ -240,6 +241,9 @@ test("public pages remain accessible and solving requires Google login", async (
   await expect(page.getByText("공개 문제 정의")).toBeVisible();
   await expect(page.getByRole("link", { name: "보고서 다운로드" })).toHaveCount(0);
   await expect(page.getByRole("tab", { name: "분석 도식" })).toHaveCount(0);
+  await page.getByRole("tab", { name: "분석 현황", exact: true }).click();
+  await expect(page.locator('.search-status')).toContainText('검색 서비스의 응답 오류');
+  await expect(page.locator('.search-status')).toContainText('검색어 12개');
   await expect(page.getByRole("button", { name: "피드백 저장" })).toHaveCount(0);
   await page.getByRole("button", { name: "Problem Solving", exact: true }).click();
   await expect(page.getByRole("link", { name: "Google로 계속하기" })).toHaveAttribute("href", "/auth/google");

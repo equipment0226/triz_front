@@ -97,6 +97,19 @@ export function ReferenceCard({ reference: r }) {
   </article>;
 }
 
+export function SearchStatus({ status = {} }) {
+  const messages = {
+    UNAVAILABLE: "검색 서비스의 응답 오류로 특허 검색을 완료하지 못했습니다. 서비스 연결이 복구된 뒤 다시 조회해야 합니다.",
+    PARTIAL: "일부 특허 자료를 확보했지만, 완료하지 못했거나 상태 확인이 필요한 검색이 남아 있습니다.",
+    UNKNOWN: "이전 검색 기록에서 서비스 오류와 정상적인 결과 0건을 구분할 수 없습니다. 재조회가 필요합니다.",
+    EMPTY: "이번 검색어에 대한 조회는 완료됐으며 수집된 특허 후보는 0건입니다.",
+    OK: "특허 후보 수집을 완료했습니다. 해결안과의 적용성 검토 결과는 해결안과 보고서에서 확인할 수 있습니다.",
+  };
+  if (!messages[status.patent_status]) return null;
+  return <div className="panel search-status"><h3>특허 검색 상태</h3><p>{messages[status.patent_status]}</p>
+    <p>검색어 {status.patent_queries || 0}개 · 확보한 후보 {status.patent_records || 0}건</p></div>;
+}
+
 export function HeroArt() {
   return (
     <div

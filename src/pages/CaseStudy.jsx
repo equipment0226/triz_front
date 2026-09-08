@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../lib/api";
-import { ReportSections, Empty } from "../components/Shared";
+import { ReportSections, Empty, SearchStatus } from "../components/Shared";
 import { Solutions } from "./Workspace";
 
 export function CaseStudy({ runId, back, solve }) {
@@ -22,7 +22,7 @@ export function CaseStudy({ runId, back, solve }) {
       {tab === "보고서" && (view.report_ready ? <>
         <ReportSections sections={view.report_sections} />
       </> : <Empty text="분석이 아직 완료되지 않았습니다. 현재까지의 해결안은 해결안 탭에서 확인할 수 있습니다." />)}
-      {tab === "분석 현황" && <div className="panel"><h2>문제 상황</h2><p>{view.query}</p><p>{view.summary || view.problem}</p><p>{view.guide}</p></div>}
+      {tab === "분석 현황" && <><SearchStatus status={view.search_status} /><div className="panel"><h2>문제 상황</h2><p>{view.query}</p><p>{view.summary || view.problem}</p><p>{view.guide}</p></div></>}
       {tab === "해결안" && <Solutions view={view} />}
       <div className="actions"><button className="button dark" onClick={() => solve(view.query)}>내 프로젝트로 새로 분석하기</button></div>
     </>}
