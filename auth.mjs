@@ -61,19 +61,27 @@ export async function handleAuth(req, res, backend, appToken) {
     res.end(); return true;
   }
   if (url.pathname === "/auth/google/callback") {
+    let step = "state";
     try {
       const flow = unseal(cookie(req, flowCookie));
       setCookie(res, flowCookie, "", 0);
       if (!configured || !equal(flow.state, url.searchParams.get("state")) || !url.searchParams.get("code")) throw new Error("Invalid callback");
+      step = "token_exchange";
       const { tokens } = await oauth.getToken({ code: url.searchParams.get("code"), codeVerifier: flow.verifier });
+      step = "id_token_verification";
       const ticket = await oauth.verifyIdToken({ idToken: tokens.id_token, audience: clientId });
       const p = ticket.getPayload();
+      step = "identity_claims";
       if (!p?.sub || !p.email_verified || !equal(p.nonce, flow.nonce)) throw new Error("Invalid identity");
+      step = "account_registration";
       const data = await accountRequest(backend, appToken, "sessions", "POST", { subject: p.sub, email: p.email, name: p.name || p.email });
       res.setHeader("Set-Cookie", [res.getHeader("Set-Cookie"), `${sessionCookie}=${data.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=43200${secure ? "; Secure" : ""}`]);
       res.writeHead(303, { Location: "/?page=solve" }); res.end();
-    } catch {
+    } catch (error) {
       // Authorization codes, tokens and upstream errors must never appear in logs or the browser.
+      const code = error?.response?.data?.error;
+      const safeCode = ["invalid_client", "invalid_grant", "invalid_request", "redirect_uri_mismatch", "access_denied"].includes(code) ? code : "rejected";
+      console.warn("Google login failed", JSON.stringify({ step, code: safeCode }));
       res.writeHead(303, { Location: "/?page=solve&login_error=1" }); res.end();
     }
     return true;
