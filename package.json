@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "dompurify": "^3.3.0",
+    "google-auth-library": "^10.0.0",
     "lucide-react": "^0.468.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"

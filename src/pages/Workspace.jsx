@@ -25,7 +25,7 @@ import {
   Send,
 } from "lucide-react";
 import { api, post } from "../lib/api";
-import { SafeLink, Bot, Figure, Empty } from "../components/Shared";
+import { SafeLink, Bot, Figure, Empty, ReportSections } from "../components/Shared";
 const icons = [
   FlaskConical,
   Layers3,
@@ -88,7 +88,7 @@ function Intake({ seed, onCreated, onError }) {
             onChange={(e) => setQuery(e.target.value)}
             maxLength={20000}
             required
-            placeholder="어떤 시스템에서, 어떤 문제가 발생하나요?\n개선하고 싶은 목표와 유지해야 할 조건을 함께 알려 주세요."
+            placeholder="어떤 시스템에서, 어떤 문제가 발생하나요? 개선하고 싶은 목표와 유지해야 할 조건을 함께 알려 주세요."
           />
           <div className="input-bottom">
             <button
@@ -492,18 +492,14 @@ export function Workspace({ selected, seed, onCreated, onError }) {
                     >
                       <Download size={16} /> 보고서 다운로드
                     </a>
-                    <a
-                      className="button subtle"
-                      href={`/api/runs/${selected}/report?format=bundle`}
-                    >
-                      <Download size={16} /> 보고서·도식 묶음
-                    </a>
+
                   </div>
                   <p className="hint">
                     HTML 보고서는 브라우저에서 열어 인쇄하거나 PDF로 저장할 수
                     있습니다.
                   </p>
                 </div>
+                <ReportSections sections={view.report_sections} />
                 <Solutions view={view} />
                 <Feedback
                   solutions={view.solutions}
@@ -799,12 +795,17 @@ function Solutions({ view }) {
               <BookOpen size={16} /> 관련 특허·논문
             </h4>
             {c.evidence.map((r, i) => (
+              <div key={i}>
               <SafeLink key={i} href={r.url}>
                 <span>{r.kind}</span>
                 {r.title}
                 <ArrowUpRight size={15} />
               </SafeLink>
+              {r.mechanism && <p className="hint">기능 대응: {r.mechanism}</p>}
+              </div>
             ))}
+            {(view.related_references || []).filter(r => r.concept_id === c.key).map((r, i) => <div key={i}>
+              <p className="hint">{r.status}</p><SafeLink href={r.reference.url}>{r.reference.title}</SafeLink><p>{r.reason}</p></div>)}
             {view.evidence_gaps
               .filter((g) => g.title === c.title)
               .map((g, i) => (

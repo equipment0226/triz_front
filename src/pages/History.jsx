@@ -54,8 +54,8 @@ export function History({ openRun, onError }) {
     <div className="section history">
       <div className="section-top">
         <div>
-          <p className="eyebrow">SAMPLE CASE · PROJECT LIBRARY</p>
-          <h1>문제에서 시작된 기록들</h1>
+          <p className="eyebrow">MY PROJECTS</p>
+          <h1>내 분석 이력</h1>
           <p className="lead">
             분석 과정과 보고서를 다시 살펴보고, 다음 가능성을 발견하세요.
           </p>

@@ -4,22 +4,17 @@ import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { resolve, extname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createHash, timingSafeEqual } from "node:crypto";
+import { handleAuth, cookie, sessionCookie } from "./auth.mjs";
 
 const root = fileURLToPath(new URL("./dist/", import.meta.url));
 const backend = new URL(process.env.BACKEND_URL || "http://127.0.0.1:8000");
 if (!["http:", "https:"].includes(backend.protocol) || backend.username || backend.password)
   throw new Error("BACKEND_URL must be an HTTP(S) origin without credentials");
 const appToken = process.env.TRIZ_APP_TOKEN || "";
-const username = process.env.DEMO_USERNAME || "";
-const password = process.env.DEMO_PASSWORD || "";
-if (Boolean(username) !== Boolean(password)) throw new Error("Set both demo credentials");
-const digest = (value) => createHash("sha256").update(value).digest();
-const expectedAuth = digest("Basic " + Buffer.from(`${username}:${password}`).toString("base64"));
 const mime = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
-  ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".ico": "image/x-icon" };
+  ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".ico": "image/x-icon" };
 const hop = new Set(["connection", "keep-alive", "proxy-authenticate", "proxy-authorization",
-  "te", "trailer", "transfer-encoding", "upgrade", "authorization", "cookie", "host", "x-triz-app-token"]);
+  "te", "trailer", "transfer-encoding", "upgrade", "authorization", "cookie", "host", "x-triz-app-token", "x-triz-session", "x-triz-user-id"]);
 
 const server = http.createServer(async (req, res) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -31,19 +26,22 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { "Content-Type": "application/json" });
       return res.end('{"ok":true}');
     }
-    if (username && !timingSafeEqual(digest(req.headers.authorization || ""), expectedAuth)) {
-      res.writeHead(401, { "WWW-Authenticate": 'Basic realm="TRIZ Studio", charset="UTF-8"', "Cache-Control": "no-store" });
-      return res.end("Sign in to TRIZ Studio");
-    }
     if (!["GET", "HEAD", "OPTIONS"].includes(req.method)) {
       const origin = req.headers.origin;
       if (req.headers["sec-fetch-site"] === "cross-site" || (origin && new URL(origin).host !== req.headers.host)) {
         res.writeHead(403); return res.end("Cross-origin request rejected");
       }
     }
+    if (await handleAuth(req, res, backend, appToken)) return;
     if (pathname === "/api" || pathname.startsWith("/api/")) {
+      const session = cookie(req, sessionCookie);
+      if (!session) {
+        res.writeHead(401, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+        return res.end(JSON.stringify({ detail: "Google 로그인 후 사용할 수 있습니다." }));
+      }
       const headers = Object.fromEntries(Object.entries(req.headers).filter(([name]) => !hop.has(name) && !name.startsWith("x-forwarded-")));
       if (appToken) headers["x-triz-app-token"] = appToken;
+      headers["x-triz-session"] = session;
       const transport = backend.protocol === "https:" ? https : http;
       // The destination is fixed; an incoming absolute URL cannot change the upstream host.
       const upstream = transport.request({ hostname: backend.hostname, port: backend.port || undefined,

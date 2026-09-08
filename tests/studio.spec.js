@@ -38,6 +38,7 @@ const run = {
   },
 };
 test.beforeEach(async ({ page }) => {
+  await page.route("**/auth/session", route => route.fulfill({ json: { configured: true, user: { name: "Fixture" } } }));
   await page.route("**/api/runs", (route) =>
     route.fulfill({
       json: [
@@ -115,7 +116,8 @@ test("history opens real run and resumes with answer", async ({ page }) => {
     await route.fulfill({ json: { ok: true } });
   });
   await page.goto("/");
-  await page.getByRole("button", { name: "Sample Case", exact: true }).click();
+  await page.getByRole("button", { name: "Problem Solving", exact: true }).click();
+  await page.getByRole("button", { name: "내 분석 이력", exact: true }).click();
   await page
     .getByRole("button", { name: /반도체 세정 성능과 패턴 손상/ })
     .click();
@@ -195,7 +197,8 @@ test("solutions render actual SVG, evidence gaps and portable report downloads",
     }),
   );
   await page.goto("/");
-  await page.getByRole("button", { name: "Sample Case", exact: true }).click();
+  await page.getByRole("button", { name: "Problem Solving", exact: true }).click();
+  await page.getByRole("button", { name: "내 분석 이력", exact: true }).click();
   await page.getByRole("button", { name: /반도체 세정/ }).click();
   await page.getByRole("button", { name: "분석 도식", exact: true }).click();
   await expect(page.locator("figure svg")).toBeVisible();
@@ -207,4 +210,16 @@ test("solutions render actual SVG, evidence gaps and portable report downloads",
     page.getByText("논문 근거를 아직 확보하지 못했습니다."),
   ).toBeVisible();
   await expect(page.locator("body")).not.toContainText("CPT-hidden-id");
+});
+
+test("public pages remain accessible and solving requires Google login", async ({ page }) => {
+  await page.route("**/auth/session", route => route.fulfill({ json: { configured: true, user: null } }));
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Main", exact: true })).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("SAMSUNG");
+  await page.getByRole("button", { name: "Sample Case", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "이런 문제에서 시작해 보세요" })).toBeVisible();
+  await page.getByRole("button", { name: "Problem Solving", exact: true }).click();
+  await expect(page.getByRole("link", { name: "Google로 계속하기" })).toHaveAttribute("href", "/auth/google");
+  await expect(page.getByLabel("해결하고 싶은 문제")).toHaveCount(0);
 });

@@ -2111,3 +2111,17 @@ th {
     break-inside: avoid;
   }
 }
+
+/* Accounts and full TRIZ report */
+.profile-card{display:flex;align-items:center;gap:48px;margin:40px auto;text-align:left;width:fit-content;max-width:100%;flex-wrap:wrap}.profile-card img{object-fit:cover;border-radius:14px;max-width:100%;height:auto}.profile-card p{font-size:17px;overflow-wrap:anywhere}.profile-card a{color:inherit}
+.account-menu,.workspace-nav,.figure-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.account-menu span{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.workspace-nav{max-width:1280px;margin:28px auto 0;padding:0 32px}
+.login-section{min-height:65vh;display:grid;place-items:center}.login-card{max-width:640px;padding:48px}.login-card h1{font-size:32px}
+.google-login{background:#fff;border:1px solid #747775;color:#1f1f1f;margin:20px 0}.google-login b{font:700 22px Arial;color:#4285f4}
+.figure{min-width:0;max-width:100%}.figure-controls{justify-content:flex-end;margin-bottom:8px}.figure-controls button{border:1px solid #cadbd7;border-radius:6px;background:white;padding:6px 12px;cursor:pointer}
+.figure .figure-scroll{overflow:auto;max-height:none;width:100%}.figure svg{display:block;width:100%;height:auto;max-height:none}
+.report-section{margin:20px 0;min-width:0}.report-prose{overflow-wrap:anywhere;line-height:1.8;overflow-x:auto}.report-prose table{border-collapse:collapse;width:100%;min-width:540px;margin:20px 0;table-layout:fixed}
+.report-prose th,.report-prose td{border:1px solid #dde5e1;padding:12px;vertical-align:top;text-align:left;font-size:13px}.report-prose th{background:#eef5f1}
+.report-prose h3{margin-top:30px}.report-prose ul,.report-prose ol{padding-left:24px}.report-prose pre{white-space:pre-wrap}.report-prose a{color:#167261}
+@media(max-width:700px){.account-menu span{display:none}.login-card{padding:26px}.workspace-nav{padding:0 20px}}

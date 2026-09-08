@@ -66,37 +66,6 @@ export function Home({ solve, learn }) {
         </div>
         <HeroArt />
       </section>
-      <section className="adopters section">
-        <div>
-          <p className="eyebrow">PROVEN THINKING, NEW POSSIBILITIES</p>
-          <p>
-            산업 현장에서 활용해 온<br />
-            <b>체계적인 문제 해결 방법, TRIZ</b>
-          </p>
-        </div>
-        <div className="company">
-          <strong>SAMSUNG</strong>
-          <SafeLink href="https://news.samsung.com/kr/혁신-dna는-이렇게-전파된다···-삼성-협력회사-혁신">
-            S사 · 공개 자료 <ArrowUpRight size={13} />
-          </SafeLink>
-        </div>
-        <div className="company">
-          <strong>POSCO</strong>
-          <SafeLink href="https://www.posco.co.kr/homepage/docs/kr/news/pbn/s91fpbnn003c.jsp?idx=201993&pidx=202002">
-            P사 · 공개 자료 <ArrowUpRight size={13} />
-          </SafeLink>
-        </div>
-        <div className="company">
-          <strong>LG CABLE</strong>
-          <SafeLink href="https://www.aitriz.org/articles/InsideTRIZ/3230313030342D4B616E67.pdf">
-            L사 · 공개 자료 <ArrowUpRight size={13} />
-          </SafeLink>
-        </div>
-        <small className="adoption-note">
-          TRIZ 방법론의 공개 활용 사례입니다. 본 서비스와의 제휴를 의미하지
-          않습니다.
-        </small>
-      </section>
       <section className="section why">
         <div className="section-top">
           <div>

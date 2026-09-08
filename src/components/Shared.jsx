@@ -58,18 +58,33 @@ export function Brand() {
 }
 
 export function Figure({ figure }) {
+  const [zoom, setZoom] = useState(1);
   return (
     <figure className="figure">
+      <div className="figure-controls"><button onClick={() => setZoom(z => Math.max(1, z - .25))} disabled={zoom <= 1} aria-label="도식 축소">−</button>
+        <button onClick={() => setZoom(1)} aria-label="도식 크기 초기화">{Math.round(zoom * 100)}%</button>
+        <button onClick={() => setZoom(z => Math.min(3, z + .25))} disabled={zoom >= 3} aria-label="도식 확대">+</button></div>
+      <div className="figure-scroll" tabIndex={0} aria-label={figure.title + " 확대 및 스크롤"}>
       <div
+        style={{ width: `${zoom * 100}%`, minWidth: 600 }}
         dangerouslySetInnerHTML={{
           __html: DOMPurify.sanitize(figure.svg, {
             USE_PROFILES: { svg: true, svgFilters: true },
           }),
         }}
       />
+      </div>
       <figcaption>{figure.title}</figcaption>
     </figure>
   );
+}
+
+export function ReportSections({ sections = [] }) {
+  return <div className="report-process">{sections.map(section => <section className="panel report-section" key={section.key}>
+    <h2>{section.title}</h2>
+    <div className="report-prose" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(section.html) }} />
+    {section.figures.map(f => <Figure key={f.key} figure={f} />)}
+  </section>)}</div>;
 }
 
 export function HeroArt() {
@@ -89,7 +104,7 @@ export function HeroArt() {
       <div className="glass-card conflict">
         <CircleDot size={17} />
         <span>
-          속도는 높게<span className="muted">손상은 낮게</span>
+          기술/물리 모순 정의<span className="muted">TRIZ 해결기법 적용</span>
         </span>
         <span className="small-line" />
       </div>

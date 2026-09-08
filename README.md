@@ -22,7 +22,8 @@ npm run dev
 | PORT | 8080 |
 | BACKEND_URL | http://triz-backend.railway.internal:8000 (실제 도메인으로 변경) |
 | TRIZ_APP_TOKEN | 백엔드와 동일한 gateway token |
-| DEMO_USERNAME / DEMO_PASSWORD | 공유 데모 접근 계정; 둘 다 설정 |
+| PUBLIC_ORIGIN | https://trizfront-production.up.railway.app |
+| GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET | Google Cloud 웹 애플리케이션 OAuth 클라이언트 |
 
 ```sh
 npm run build
@@ -31,4 +32,7 @@ npm start
 ```
 
 `/healthz`는 배포 healthcheck다. API와 보고서는 로그인 후 같은 프런트 도메인을 통해 접근한다.
-내부 MCP와 n8n endpoint는 프록시하지 않는다. 데모 인증은 사용자별 데이터 격리가 아니다.
+내부 MCP와 n8n endpoint는 프록시하지 않는다. 공개 페이지에는 인증을 요구하지 않으며 Problem Solving과 개인 이력은 Google 로그인 후 사용한다.
+Google Cloud의 승인된 리디렉션 URI에 `https://trizfront-production.up.railway.app/auth/google/callback`을 등록한다.
+최초 로그인은 회원 계정을 자동 생성한다. HTTP-only 쿠키와 MySQL의 만료·철회 가능한 세션을 사용하며, 각 분석은 계정 소유자만 조회·수정·다운로드한다.
+로컬 로그인 통합 확인은 `npm run build` 후 `PUBLIC_ORIGIN=http://localhost:8080`과 대응하는 OAuth 리디렉션 설정으로 `npm start`한다. Vite는 UI 개발용이며 인증 fixture는 브라우저 테스트에서만 제공한다.
