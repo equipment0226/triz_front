@@ -37,7 +37,37 @@ const run = {
     },
   },
 };
+
+test('both report screens keep centered tables, semantic colors and compact model notes', async ({ page }) => {
+  const detail = { ...run, pending:null, status:'COMPLETED', report_ready:true,
+    report_sections:[{key:'report-layout',title:'보고서 양식 확인',blocks:[
+      {type:'html',html:'<table><tr><th>방향</th><th>설명</th></tr><tr><td><strong class="report-term" style="color:#1764b5">개선</strong></td><td>높이가 다른 셀<br>두 번째 줄</td></tr></table>'},
+      {type:'figure',figure:{key:'standard-0',compact:true,title:'표준해 변환',note:'주황: 변경된 물질·장',
+        svg:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 180"><g class="diagram-node" data-tone="changed"><circle cx="150" cy="90" r="60" fill="#fff0d5"/><text x="150" y="90" text-anchor="middle">최소 샘플링</text></g></svg>'}}
+    ]}]};
+  await page.route('**/api/runs/run-test/view', route=>route.fulfill({json:detail}));
+  await page.route('**/api/public/runs/run-test/view', route=>route.fulfill({json:detail}));
+  await page.goto('/');
+  await page.getByRole('button',{name:'Problem Solving',exact:true}).click();
+  await page.getByRole('button',{name:'내 분석 이력',exact:true}).click();
+  await page.getByRole('button',{name:/반도체 세정/}).click();
+  await page.getByRole('button',{name:'보고서',exact:true}).click();
+  async function verify() {
+    await expect(page.locator('.figure-compact circle')).toHaveCount(1);
+    await expect(page.locator('.figure-note')).toContainText('변경된 물질');
+    expect(await page.locator('.report-prose th,.report-prose td').evaluateAll(cells=>cells.every(c=>
+      getComputedStyle(c).textAlign==='center' && getComputedStyle(c).verticalAlign==='middle'))).toBe(true);
+    await expect(page.locator('.report-term')).toHaveCSS('color','rgb(23, 100, 181)');
+  }
+  await verify();
+  await page.getByRole('button',{name:'Sample Case',exact:true}).click();
+  await page.getByRole('button',{name:/반도체 세정/}).click();
+  await verify();
+});
 test.beforeEach(async ({ page }) => {
+  await page.route('**/api/notifications',route=>route.fulfill({json:[]}));
+  await page.route('**/api/public/runs?*',route=>route.fulfill({json:{items:[{run_id:'run-test',title:run.title,industry:'반도체',status:'COMPLETED',mode:'FULL'}],total:1,page:1,page_size:20}}));
+  await page.route('**/api/runs?*',route=>route.fulfill({json:{items:[{run_id:'run-test',title:run.title,industry:'반도체',status:'WAITING_HUMAN',mode:'FULL'}],total:1,page:1,page_size:20}}));
   await page.route("**/api/public/runs", route => route.fulfill({ json: [{ run_id: "run-test", title: run.title, industry: "반도체", status: "COMPLETED" }] }));
   await page.route("**/api/public/runs/run-test/view", route => route.fulfill({ json: { ...run, pending: null, report_ready: true,
     search_status: {patent_status:"UNAVAILABLE",patent_queries:12,patent_records:0},
@@ -241,9 +271,8 @@ test("public pages remain accessible and solving requires Google login", async (
   await expect(page.getByText("공개 문제 정의")).toBeVisible();
   await expect(page.getByRole("link", { name: "보고서 다운로드" })).toHaveCount(0);
   await expect(page.getByRole("tab", { name: "분석 도식" })).toHaveCount(0);
-  await page.getByRole("tab", { name: "분석 현황", exact: true }).click();
-  await expect(page.locator('.search-status')).toContainText('검색 서비스의 응답 오류');
-  await expect(page.locator('.search-status')).toContainText('검색어 12개');
+  await page.getByRole("tab", { name: "문제 정의", exact: true }).click();
+  await expect(page.locator('.search-status')).toHaveCount(0);
   await expect(page.getByRole("button", { name: "피드백 저장" })).toHaveCount(0);
   await page.getByRole("button", { name: "Problem Solving", exact: true }).click();
   await expect(page.getByRole("link", { name: "Google로 계속하기" })).toHaveAttribute("href", "/auth/google");

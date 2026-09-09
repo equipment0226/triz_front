@@ -25,15 +25,8 @@ import {
   Send,
 } from "lucide-react";
 import { api, post } from "../lib/api";
-import { SafeLink, Bot, Empty, ReportSections, ReferenceCard, SearchStatus } from "../components/Shared";
-const icons = [
-  FlaskConical,
-  Layers3,
-  Network,
-  ShieldCheck,
-  ChartNoAxesCombined,
-  UserRound,
-];
+import { SafeLink, Bot, Empty, ReportSections, ReferenceCard, TreeSpeech, Loading } from "../components/Shared";
+import { ProblemDefinition } from "../components/ProblemDefinition";
 const statusLabel = {
   CREATED: "분석 준비",
   QUEUED: "분석 대기",
@@ -95,25 +88,25 @@ function Intake({ seed, onCreated, onError }) {
           <div className="input-bottom">
             <button
               type="button"
-              className="button subtle"
+              className="button subtle attachment-button"
               onClick={() => fileRef.current.click()}
             >
-              <Paperclip size={16} /> 참고 자료 첨부
+              <Paperclip size={16} /><span>참고 자료 첨부<small>(20MB 이하)</small></span>
             </button>
-            <span>{query.length.toLocaleString()} / 20,000</span>
             <input
               ref={fileRef}
               type="file"
-              hidden
+              aria-label="참고 자료 파일 선택"
+              className="attachment-file"
               multiple
               accept=".pdf,.xlsx,.csv,.txt,.md,.png,.jpg,.jpeg,.webp"
               onChange={(e) => {
                 const incoming = [...e.target.files];
                 if (
-                  incoming.some((f) => f.size > 25 * 1024 * 1024) ||
+                  incoming.some((f) => f.size > 20 * 1024 * 1024) ||
                   files.length + incoming.length > 8
                 ) {
-                  onError("파일당 25MB, 최대 8개까지 첨부해 주세요.");
+                  onError("파일당 20MB 이하, 최대 8개까지 첨부해 주세요.");
                   return;
                 }
                 setFiles([...files, ...incoming]);
@@ -139,9 +132,7 @@ function Intake({ seed, onCreated, onError }) {
             </div>
           )}
           <p className="hint">
-            무료 베타 기간에 제출한 문제와 분석 결과는 Sample Case에 공개됩니다.
-            사양서, 공정 데이터, 도면을 함께 주시면 분석이 더 구체적이 됩니다.
-            PDF·Excel·이미지, 파일당 25MB까지.
+            사양서, 공정 데이터, 도면을 함께 주시면 더욱 구체적인 분석이 가능해요
           </p>
           <fieldset>
             <legend>분석 깊이</legend>
@@ -177,8 +168,13 @@ function Intake({ seed, onCreated, onError }) {
           </button>
         </form>
         <aside className="intake-aside">
-          <Bot />
+          <Bot mood="welcome" />
           <h3>좋은 분석을 위한 작은 힌트</h3>
+          <TreeSpeech messages={[
+            '지금 관찰한 현상을 편하게 적어 주세요. 완벽하게 정리하지 않아도 괜찮아요.',
+            '현재 수치와 원하는 목표가 있나요? 단위까지 알려주시면 큰 도움이 돼요.',
+            '바꿀 수 없는 설비나 예산이 있다면 함께 알려 주세요. 그 안에서 방법을 찾을게요.'
+          ]}/>
           <ol>
             <li>
               <b>지금 어떤 일이 일어나나요?</b>
@@ -205,9 +201,8 @@ function Intake({ seed, onCreated, onError }) {
   );
 }
 
-export function Workspace({ selected, seed, onCreated, onError }) {
+export function Workspace({ selected, seed, onCreated, onError, tab = "분석 현황", onTabChange: setTab }) {
   const [view, setView] = useState(null),
-    [tab, setTab] = useState("분석 현황"),
     [busy, setBusy] = useState(false),
     [instruction, setInstruction] = useState(""),
     [stage, setStage] = useState(""),
@@ -242,6 +237,7 @@ export function Workspace({ selected, seed, onCreated, onError }) {
     try {
       await post(`/runs/${selected}/${path}`, body);
       await refresh();
+      window.dispatchEvent(new Event('triz-run-updated'));
       return true;
     } catch (e) {
       onError(e.message);
@@ -254,12 +250,13 @@ export function Workspace({ selected, seed, onCreated, onError }) {
     return <Intake seed={seed} onCreated={onCreated} onError={onError} />;
   if (!view)
     return (
-      <div className="empty">
-        <Bot />
-        <p>프로젝트를 불러오고 있어요.</p>
-      </div>
+<Loading />
     );
   const paused = !["RUNNING", "QUEUED"].includes(view.status);
+  const stageName=view.stages[Math.min(view.stage_index,view.stages.length-1)]?.label||'문제 분석';
+  const speech = view.pending ? [view.guide, '다음 단계로 가기 전에 의견을 들려주세요. 아래 요청에서 이어갈 수 있어요.'] :
+    view.report_ready ? [view.guide, '해결안의 조건과 검증 계획을 살펴보고 피드백을 남겨 주세요.'] :
+    paused ? [view.guide] : [view.guide, `${stageName} 단계가 진행 중이에요. 확인이 필요한 내용이 생기면 알림으로 알려드릴게요.`, '다른 페이지를 둘러보셔도 분석은 계속돼요. 지금까지의 결과는 단계별로 저장하고 있어요.'];
   return (
     <div className="section workspace">
       <div className="project-heading">
@@ -307,10 +304,12 @@ export function Workspace({ selected, seed, onCreated, onError }) {
         </aside>
         <div className="work-main">
           <div className="guide">
-            <Bot small />
+            <Bot mood={view.pending?'waiting':paused?'calm':'thinking'} />
             <div>
               <b>트리와 함께하는 문제 해결</b>
-              <p aria-live="polite">{view.guide}</p>
+              <span className="guide-stage"><span className="dot"/>{statusLabel[view.status]} · {stageName}</span>
+              <TreeSpeech messages={speech} stateKey={view.status+view.stage_index+(view.pending?.interrupt_id||'')} active={speech.length>1}/>
+              <span className="sr-only" role="status">{view.guide}</span>
             </div>
             {["FAILED", "INTERRUPTED", "QUEUED"].includes(view.status) && (
               <button
@@ -323,7 +322,7 @@ export function Workspace({ selected, seed, onCreated, onError }) {
             )}
           </div>
           <div className="tabs">
-            {["분석 현황", "해결안", "보고서", "피드백"].map((t) => (
+            {["분석 현황", "문제 정의", "해결안", "보고서", "피드백"].map((t) => (
               <button
                 key={t}
                 className={tab === t ? "active" : ""}
@@ -335,7 +334,6 @@ export function Workspace({ selected, seed, onCreated, onError }) {
           </div>
           {tab === "분석 현황" && (
             <>
-              <SearchStatus status={view.search_status} />
               {view.pending && (
                 <HumanInput
                   key={view.pending.interrupt_id}
@@ -350,46 +348,6 @@ export function Workspace({ selected, seed, onCreated, onError }) {
                     })
                   }
                 />
-              )}
-              <div className="panel">
-                <p className="eyebrow">PROBLEM FRAME</p>
-                <h2>문제의 경계를 함께 정리합니다</h2>
-                <p>{view.problem || view.query}</p>
-                {view.constraints.length > 0 && (
-                  <>
-                    <h4>지켜야 할 조건</h4>
-                    <ul className="clean-list">
-                      {view.constraints.map((c, i) => (
-                        <li key={i}>
-                          <Check size={15} />
-                          {c}
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </div>
-              {view.reviewers.length > 0 && (
-                <div className="panel">
-                  <h3>이 문제를 검토하는 전문가</h3>
-                  <div className="reviewers">
-                    {view.reviewers.map((p, i) => {
-                      const Icon = icons[p.avatar];
-                      return (
-                        <article key={i}>
-                          <span className={"avatar tone" + p.avatar}>
-                            <UserRound size={24} />
-                            <Icon size={12} className="expertise-badge" />
-                          </span>
-                          <div>
-                            <b>{p.role}</b>
-                            <p>{p.mandate}</p>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                </div>
               )}
               <div className="panel">
                 <h3>분석에 의견 더하기</h3>
@@ -473,6 +431,7 @@ export function Workspace({ selected, seed, onCreated, onError }) {
               </div>
             </>
           )}
+          {tab === "문제 정의" && <ProblemDefinition view={view} />}
           {tab === "해결안" && <Solutions view={view} />}
           {tab === "보고서" &&
             (view.report_ready ? (

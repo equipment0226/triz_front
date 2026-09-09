@@ -24,13 +24,14 @@ import {
   RefreshCw,
   Send,
 } from "lucide-react";
-import { SafeLink, Bot, HeroArt } from "../components/Shared";
+import { SafeLink, Bot, HeroArt, TreeSpeech, useReveal } from "../components/Shared";
 import { samples } from "../data/examples";
 export function Home({ solve, learn }) {
+  const reveal=useReveal();
   return (
-    <>
+    <div ref={reveal} className="marketing-page">
       <section className="hero section">
-        <div className="hero-copy">
+        <div className="hero-copy" data-reveal>
           <p className="eyebrow">
             <span className="dot" /> ENGINEER YOUR NEXT POSSIBILITY
           </p>
@@ -100,7 +101,7 @@ export function Home({ solve, learn }) {
               "제약과 여러 전문가의 관점을 함께 검토하고, 실행을 위한 실험 계획을 세웁니다.",
             ],
           ].map(([Icon, title, desc], i) => (
-            <article className="feature" key={title}>
+            <article className="feature" key={title} data-reveal style={{'--reveal-delay':`${i*110}ms`}}>
               <span className="number">0{i + 1}</span>
               <Icon size={29} strokeWidth={1.3} />
               <h3>{title}</h3>
@@ -121,15 +122,10 @@ export function Home({ solve, learn }) {
         </div>
         <div className="sample-grid">
           {samples.map(([tag, title, query], i) => (
-            <button key={tag} className="sample" onClick={() => solve(query)}>
+            <button key={tag} className="sample" onClick={() => solve(query)} data-reveal style={{'--reveal-delay':`${i*110}ms`}}>
               <span className={"sample-art a" + i}>
-                {i === 0 ? (
-                  <Layers3 size={80} strokeWidth={0.7} />
-                ) : i === 1 ? (
-                  <Network size={80} strokeWidth={0.7} />
-                ) : (
-                  <CircleDot size={80} strokeWidth={0.7} />
-                )}
+                <img src={['/images/semiconductor-cleanroom.jpg','/images/deposition.jpg','/images/datacenter.jpg'][i]} alt={['반도체 제조 클린룸의 공정 장비','플라즈마 화학기상증착 장비','데이터센터의 서버 랙'][i]} loading="lazy" width="960" height="640"/>
+                <span className="photo-label">{['SEMICONDUCTOR','PRECISION PROCESS','DATA INFRASTRUCTURE'][i]}</span>
               </span>
               <small>{tag}</small>
               <h3>{title}</h3>
@@ -139,6 +135,7 @@ export function Home({ solve, learn }) {
             </button>
           ))}
         </div>
+        <details className="photo-credits"><summary>사진 출처</summary><p>반도체 클린룸: <SafeLink href="https://commons.wikimedia.org/wiki/File:Clean_room.jpg">NASA Glenn Research Center</SafeLink> · Public domain.<br/>증착 장비: <SafeLink href="https://commons.wikimedia.org/wiki/File:Chemical_vapour_deposition_machine_in_the_LCN.jpg">O. Usher (UCL MAPS)</SafeLink> · <SafeLink href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</SafeLink>.<br/>서버: <SafeLink href="https://commons.wikimedia.org/wiki/File:Wikimedia_Foundation_Servers-8055_35.jpg">Victor Grigas / Wikimedia Foundation</SafeLink> · <SafeLink href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</SafeLink>.<br/>카드 비율에 맞춰 화면에서 일부 영역을 표시합니다.</p></details>
       </section>
       <section className="section start-banner">
         <div>
@@ -149,13 +146,14 @@ export function Home({ solve, learn }) {
           문제 해결 시작 <ArrowUpRight size={18} />
         </button>
       </section>
-    </>
+    </div>
   );
 }
 
 export function Introduction({ solve }) {
+  const reveal=useReveal();
   return (
-    <div className="section intro">
+    <div className="section intro" ref={reveal}>
       <p className="eyebrow">MEET YOUR THINKING PARTNER</p>
       <h1>
         TRIZ를 몰라도,
@@ -189,24 +187,19 @@ export function Introduction({ solve }) {
             "검토하고 실행합니다",
             "특허·논문, 제약 검토, 다직군 평가를 거쳐 가정과 검증 실험을 보고서에 담습니다.",
           ],
-        ].map(([n, t, d]) => (
-          <article key={n}>
+        ].map(([n, t, d],i) => (
+          <article key={n} data-reveal style={{'--reveal-delay':`${i*220}ms`}}>
             <span>{n}</span>
             <h3>{t}</h3>
             <p>{d}</p>
           </article>
         ))}
       </div>
-      <div className="intro-callout">
-        <Bot />
+      <div className="intro-callout" data-reveal>
+        <Bot mood="welcome" />
         <div>
           <h3>중요한 판단에는 당신의 의견을.</h3>
-          <p>
-            추가 질문에 답하고, 대상 시스템을 확정하고, 중간 분석에 의견을
-            남기세요.
-            <br />
-            필요한 전문가의 관점을 추가해 해당 단계부터 다시 검토할 수 있습니다.
-          </p>
+          <TreeSpeech messages={['문제를 편하게 설명해 주세요. 필요한 정보는 제가 하나씩 물어볼게요.','중요한 판단 앞에서는 잠깐 멈추고 의견을 기다려요. 우리는 함께 문제를 풀고 있어요.','다른 관점이 필요하다면 전문가를 추가하고, 원하는 단계부터 다시 검토할 수 있어요.']}/>
         </div>
       </div>
       <button className="button dark" onClick={() => solve()}>

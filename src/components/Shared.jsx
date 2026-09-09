@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   ArrowUpRight,
+  ArrowUp,
   ArrowRight,
   ArrowLeft,
   Sparkles,
@@ -35,14 +36,63 @@ export function SafeLink({ href, children, ...props }) {
   );
 }
 
-export function Bot({ small = false }) {
+export function Bot({ small = false, mood = 'thinking' }) {
   return (
-    <div className={"bot " + (small ? "small" : "")} aria-hidden="true">
+    <div className={"bot bot-" + mood + ' ' + (small ? "small" : "")} aria-hidden="true">
       <span />
       <span />
       <i />
     </div>
   );
+}
+
+export function TreeSpeech({messages, stateKey='', active=true}) {
+  const [index,setIndex]=useState(0);
+  const signature=messages.join('|');
+  useEffect(()=>{
+    setIndex(0);
+    if(!active||messages.length<2||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    const timer=setInterval(()=>setIndex(i=>(i+1)%messages.length),6500);
+    return ()=>clearInterval(timer);
+  },[signature,stateKey,active]);
+  return <div className="tree-speech"><p key={stateKey+index} className="speech-message">{messages[index%messages.length]}</p>
+    {active&&<span className="speaking-dots" aria-hidden="true"><i/><i/><i/></span>}</div>;
+}
+
+export function Loading({text='프로젝트를 불러오고 있어요.'}) {
+  return <div className="tree-loading" role="status"><div className="loading-orbit"><Bot/></div><p>{text}</p><span className="speaking-dots" aria-hidden="true"><i/><i/><i/></span></div>;
+}
+
+export function ModeBadge({mode}) {
+  const data={LITE:['빠른','빠른 탐색'],FULL:['표준','표준 분석'],DEEP:['심층','심층 분석']}[mode];
+  return data?<span className={'mode-badge mode-'+mode} role="img" aria-label={data[1]}>{data[0]}</span>:null;
+}
+
+export function ScrollToTop() {
+  const [visible,setVisible] = useState(window.scrollY > 320);
+  useEffect(() => {
+    const update = () => setVisible(window.scrollY > 320);
+    window.addEventListener('scroll',update,{passive:true});
+    return () => window.removeEventListener('scroll',update);
+  },[]);
+  return visible ? <button className="scroll-to-top" aria-label="맨 위로 이동" title="맨 위로 이동"
+    onClick={() => window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'})}>
+    <ArrowUp size={21}/><span>맨 위로</span>
+  </button> : null;
+}
+
+export function useReveal() {
+  const root=useRef();
+  useEffect(()=>{
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    const nodes=root.current?.querySelectorAll('[data-reveal]')||[];
+    const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{
+      if(entry.isIntersecting){entry.target.classList.add('revealed');observer.unobserve(entry.target);}
+    }),{threshold:.12});
+    nodes.forEach(node=>{node.classList.add('reveal-ready');observer.observe(node);});
+    return ()=>observer.disconnect();
+  },[]);
+  return root;
 }
 
 export function Brand() {
@@ -60,13 +110,13 @@ export function Brand() {
 export function Figure({ figure }) {
   const [zoom, setZoom] = useState(1);
   return (
-    <figure className="figure">
+    <figure className={`figure${figure.compact ? ' figure-compact' : ''}`}>
       <div className="figure-controls"><button onClick={() => setZoom(z => Math.max(1, z - .25))} disabled={zoom <= 1} aria-label="도식 축소">−</button>
         <button onClick={() => setZoom(1)} aria-label="도식 크기 초기화">{Math.round(zoom * 100)}%</button>
         <button onClick={() => setZoom(z => Math.min(3, z + .25))} disabled={zoom >= 3} aria-label="도식 확대">+</button></div>
       <div className="figure-scroll" tabIndex={0} aria-label={figure.title + " 확대 및 스크롤"}>
       <div
-        style={{ width: `${zoom * 100}%`, minWidth: 600 }}
+        className="figure-canvas" style={{ width: `${zoom * 100}%` }}
         dangerouslySetInnerHTML={{
           __html: DOMPurify.sanitize(figure.svg, {
             USE_PROFILES: { svg: true, svgFilters: true },
@@ -75,6 +125,7 @@ export function Figure({ figure }) {
       />
       </div>
       <figcaption>{figure.title}</figcaption>
+      {figure.note && <p className="figure-note">{figure.note}</p>}
     </figure>
   );
 }
