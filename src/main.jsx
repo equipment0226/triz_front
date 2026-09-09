@@ -3,4 +3,8 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./style.css";
 import "./experience.css";
+import "./mobile-input.css";
+import { installMobileInputZoom } from "./lib/mobileInputZoom";
+const removeInputZoom = installMobileInputZoom();
+if (import.meta.hot) import.meta.hot.dispose(removeInputZoom);
 createRoot(document.getElementById("root")).render(<App />);

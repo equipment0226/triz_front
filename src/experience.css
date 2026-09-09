@@ -84,6 +84,7 @@ body:has(.notification-toast) .scroll-to-top{bottom:calc(330px + env(safe-area-i
 main>.workspace-nav,.section.workspace,.section.intake,.section.history,.section.public-case{max-width:1440px;padding-inline:clamp(16px,5vw,72px)}
 .project-heading>div{flex:1;min-width:0}.project-heading>.pill{flex-shrink:0}
 .guide>div:nth-child(2){max-width:none}
+.guide>.button{flex-shrink:0;max-width:100%;min-height:44px;white-space:normal;overflow-wrap:anywhere}.guide>.button>svg{flex-shrink:0}
 @media(max-width:1000px){
   .work-grid{grid-template-columns:minmax(0,1fr);gap:18px}
   .stage-nav{display:flex;min-width:0;max-width:100%;overflow-x:auto;padding:0 0 10px;border:0;gap:8px;align-items:center}
@@ -95,7 +96,8 @@ main>.workspace-nav,.section.workspace,.section.intake,.section.history,.section
   main>.workspace-nav{margin-top:18px;gap:8px}.workspace{padding-top:24px}.project-heading{gap:12px;margin-bottom:24px}
   .tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;margin:18px 0;overflow:visible;white-space:normal}
   .tabs button{min-width:0;padding:13px 2px;font-size:clamp(10px,2.8vw,12px);white-space:nowrap}
-  .guide{padding:18px;margin-bottom:18px}.guide .tree-speech{min-height:112px}.guide>.button{grid-column:2;margin-left:0;justify-self:start}
+  .guide{display:grid;grid-template-columns:auto minmax(0,1fr);padding:18px;margin-bottom:18px}.guide .tree-speech{min-height:112px}
+  .guide>.button{grid-column:1/-1;margin-left:0;justify-self:stretch;width:100%;min-width:0;padding:12px 14px;gap:8px;font-size:13px;line-height:1.5}
   .report-section{padding:18px 14px}.report-section h2{font-size:20px;overflow-wrap:anywhere}
   .report-prose table{min-width:560px;table-layout:auto}.report-prose th,.report-prose td{padding:10px 8px}
   .figure{padding:10px}.figure-canvas{min-width:480px}.figure-controls{justify-content:flex-end}
