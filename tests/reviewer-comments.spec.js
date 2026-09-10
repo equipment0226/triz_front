@@ -1,6 +1,6 @@
 import {test, expect} from '@playwright/test';
 
-test('solution cards show distinct dimension scores without aliases or generic duplicate labels', async ({page}) => {
+test('private and sample solution cards keep the stored total without dimension charts', async ({page}) => {
   const comments = [
     {role:'현장 운영 검토자',comment:'책임자의 승인 범위를 먼저 확정하면 작은 팀부터 도입할 수 있습니다.'},
     {role:'비용 및 자원 관리 검토자',comment:'기존 인력으로 시범 운영하되 반복 업무가 늘어나는지 먼저 확인해야 합니다.'},
@@ -15,22 +15,22 @@ test('solution cards show distinct dimension scores without aliases or generic d
   await page.route('**/auth/session',route=>route.fulfill({json:{configured:true,user:{id:'tester',name:'Tester'}}}));
   await page.route('**/api/notifications',route=>route.fulfill({json:[]}));
   await page.route('**/api/runs/comments-run/view',route=>route.fulfill({json:view}));
+  await page.route('**/api/public/runs/comments-run/view',route=>route.fulfill({json:view}));
   for(const width of [320,390,1366]) {
     await page.setViewportSize({width,height:844});
-    await page.goto('/?page=solve&run=comments-run');
-    await page.getByRole('button',{name:'해결안',exact:true}).click();
+    for (const path of ['/?page=solve&run=comments-run&tab=solutions', '/?page=cases&run=comments-run&tab=solutions']) {
+    await page.goto(path);
     const card=page.locator('.solution-card');
+    await expect(card).toBeVisible();
+    await expect(card.locator('.score')).toHaveText('3.5 / 5');
     await expect(card.locator('.reviewer-comments')).toHaveCount(0);
-    await expect(card.locator('meter')).toHaveCount(6);
-    for (const label of ['소요 시간','비용','목표 기여도','모순 해소','인과 근거','안전']) {
-      await expect(card.locator('.score-bars span').filter({hasText:new RegExp(`^${label}$`)})).toHaveCount(1);
-    }
-    await expect(card.getByRole('meter',{name:'안전',exact:true})).toHaveAttribute('value','2');
-    await expect(card.locator('.score-bars span').filter({hasText:/^평가$/})).toHaveCount(0);
+    await expect(card.locator('meter')).toHaveCount(0);
+    await expect(card.locator('.score-bars')).toHaveCount(0);
     for(const {role,comment} of comments) {
       await expect(card.getByText(role,{exact:true})).toHaveCount(0);
       await expect(card.getByText(comment,{exact:true})).toHaveCount(0);
     }
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+    }
   }
 });

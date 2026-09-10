@@ -25,7 +25,6 @@ import {
   Send,
 } from "lucide-react";
 import { api, post } from "../lib/api";
-import { evaluationScores } from "../lib/evaluationScores";
 import { SafeLink, Bot, Empty, ReportSections, ReferenceCard, TreeSpeech, Loading } from "../components/Shared";
 import { ProblemDefinition } from "../components/ProblemDefinition";
 const statusLabel = {
@@ -683,17 +682,6 @@ export function Solutions({ view }) {
             <b>기대 효과와 가정</b>
             <p>{c.effect}</p>
           </div>
-          {evaluationScores(c.dimensions).length > 0 && (
-            <div className="score-bars" aria-label="항목별 평가 점수">
-              {evaluationScores(c.dimensions).map(({key, label, score}) => (
-                <div key={key}>
-                  <span>{label}</span>
-                  <meter min="0" max="5" value={score} aria-label={label} />
-                  <b>{score.toFixed(1)}</b>
-                </div>
-              ))}
-            </div>
-          )}
           <details>
             <summary>
               적용 조건과 검증 계획 <Plus size={16} />
