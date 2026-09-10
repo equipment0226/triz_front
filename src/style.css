@@ -1420,6 +1420,32 @@ label > small {
   font-weight: 400;
   font-size: 10px;
 }
+.reviewer-comments {
+  margin: 24px 0;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.reviewer-comments > div {
+  display: grid;
+  grid-template-columns: minmax(80px, 24%) minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.reviewer-comments dt {
+  color: #9eb779;
+  font-weight: 600;
+}
+.reviewer-comments dd {
+  margin: 0;
+}
+@media (max-width: 480px) {
+  .reviewer-comments > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3px;
+  }
+}
 .solution-card details {
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);

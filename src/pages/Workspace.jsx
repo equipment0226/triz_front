@@ -682,27 +682,15 @@ export function Solutions({ view }) {
             <b>기대 효과와 가정</b>
             <p>{c.effect}</p>
           </div>
-          {Object.keys(c.dimensions).length > 0 && (
-            <div className="score-bars">
-              {Object.entries(c.dimensions).map(([k, v]) => (
-                <div key={k}>
-                  <span>
-                    {{
-                      FEASIBILITY: "구현성",
-                      QUALITY: "품질",
-                      RISK: "위험 관리",
-                      COST: "비용",
-                      TIME: "소요 시간",
-                      ADOPTION: "도입성",
-                      SAFETY: "안전",
-                      SCALABILITY: "확장성",
-                    }[k] || "평가"}
-                  </span>
-                  <meter min="0" max="5" value={v} />
-                  <b>{v.toFixed(1)}</b>
+          {c.reviewer_comments?.length > 0 && (
+            <dl className="reviewer-comments" aria-label="직군별 최종 의견">
+              {c.reviewer_comments.map(({role, comment}) => (
+                <div key={role}>
+                  <dt>{role}</dt>
+                  <dd>{comment}</dd>
                 </div>
               ))}
-            </div>
+            </dl>
           )}
           <details>
             <summary>
