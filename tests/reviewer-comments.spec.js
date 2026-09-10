@@ -1,6 +1,6 @@
 import {test, expect} from '@playwright/test';
 
-test('solution cards show one final comment per role at desktop and mobile widths', async ({page}) => {
+test('solution cards show distinct dimension scores without aliases or generic duplicate labels', async ({page}) => {
   const comments = [
     {role:'현장 운영 검토자',comment:'책임자의 승인 범위를 먼저 확정하면 작은 팀부터 도입할 수 있습니다.'},
     {role:'비용 및 자원 관리 검토자',comment:'기존 인력으로 시범 운영하되 반복 업무가 늘어나는지 먼저 확인해야 합니다.'},
@@ -10,7 +10,7 @@ test('solution cards show one final comment per role at desktop and mobile width
     constraints:[],reviewers:[],report_sections:[],report_ready:true,pending:null,figures:[],additions:[],
     solutions:[{key:'C1',title:'승인 범위 명시',summary:'작은 팀에서 검증',description:'권한과 책임을 함께 정합니다.',
       mechanism:'책임자 승인',effect:'승인 지연 감소',score:3.5,rank:1,verdict:'조건 확인 필요',
-      dimensions:{TIME:3,COST:3,GOAL:4,RESOLUTION:4,CAUSAL:3},reviewer_comments:comments,
+      dimensions:{TIME:3,COST:3,GOAL:4,RESOLUTION:4,CAUSAL:3,SAFETY:2,' safety ':1,'안전':1},reviewer_comments:comments,
       assumptions:[],transfer_conditions:[],validation:[],risks:[],evidence:[],reference_cards:[]}]};
   await page.route('**/auth/session',route=>route.fulfill({json:{configured:true,user:{id:'tester',name:'Tester'}}}));
   await page.route('**/api/notifications',route=>route.fulfill({json:[]}));
@@ -20,11 +20,16 @@ test('solution cards show one final comment per role at desktop and mobile width
     await page.goto('/?page=solve&run=comments-run');
     await page.getByRole('button',{name:'해결안',exact:true}).click();
     const card=page.locator('.solution-card');
-    await expect(card.locator('.reviewer-comments > div')).toHaveCount(2);
-    await expect(card.locator('meter')).toHaveCount(0);
+    await expect(card.locator('.reviewer-comments')).toHaveCount(0);
+    await expect(card.locator('meter')).toHaveCount(6);
+    for (const label of ['소요 시간','비용','목표 기여도','모순 해소','인과 근거','안전']) {
+      await expect(card.locator('.score-bars span').filter({hasText:new RegExp(`^${label}$`)})).toHaveCount(1);
+    }
+    await expect(card.getByRole('meter',{name:'안전',exact:true})).toHaveAttribute('value','2');
+    await expect(card.locator('.score-bars span').filter({hasText:/^평가$/})).toHaveCount(0);
     for(const {role,comment} of comments) {
-      await expect(card.getByText(role,{exact:true})).toHaveCount(1);
-      await expect(card.getByText(comment,{exact:true})).toBeVisible();
+      await expect(card.getByText(role,{exact:true})).toHaveCount(0);
+      await expect(card.getByText(comment,{exact:true})).toHaveCount(0);
     }
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
   }
