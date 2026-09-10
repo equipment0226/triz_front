@@ -725,10 +725,10 @@ export function Solutions({ view }) {
               ))}
             </ul>
           </details>
-          {solutionReferences(view, c).length > 0 && <div className="references">
-            <h4><BookOpen size={16} /> 관련 특허·논문</h4>
+          {solutionReferences(view, c).length > 0 && <details className="references">
+            <summary>관련 특허·논문 <Plus size={16} /></summary>
             {solutionReferences(view, c).map((r, i) => <ReferenceCard key={i} reference={r} />)}
-          </div>}
+          </details>}
         </article>
       ))}
       {view.additions.length > 0 && (
