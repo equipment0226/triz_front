@@ -92,7 +92,7 @@ test.beforeEach(async ({ page }) => {
     route.fulfill({ json: run }),
   );
 });
-test("desktop landing, five pages and original illustration", async ({
+test("desktop landing, five pages and technology photograph", async ({
   page,
 }) => {
   const errors = [];
@@ -102,12 +102,12 @@ test("desktop landing, five pages and original illustration", async ({
   await expect(
     page.getByRole("heading", { name: /풀리지 않던 문제/ }),
   ).toBeVisible();
-  await expect(page.getByRole("img", { name: /TRIZ 개념도/ })).toBeVisible();
+  await expect(page.getByRole("img", { name: /연구자들이 로봇 장치를/ })).toBeVisible();
   await page.screenshot({
     path: "test-results/landing-desktop.png",
     fullPage: true,
   });
-  await page.getByRole("button", { name: "Tool 소개", exact: true }).click();
+  await page.getByRole("button", { name: "Introduction", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: /TRIZ를 몰라도/ }),
   ).toBeVisible();

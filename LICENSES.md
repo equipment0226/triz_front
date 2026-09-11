@@ -1,6 +1,15 @@
 # 화면 자산과 출처
 
-- 메인 TRIZ 레이어 일러스트, 궤도·배경, 안내 캐릭터: 이 프로젝트에서 작성한 CSS 도형.
+- `public/images/human-ai-collaboration.jpg`: Tara Winstead, [Black and White Photo of Human Hand and Robot Hand](https://www.pexels.com/photo/black-and-white-photo-of-human-hand-and-robot-hand-8386422/), [Pexels License](https://www.pexels.com/license/). 무료 웹사이트 사용이 허용된 사진으로 원본 파일을 제공하며 화면에서는 CSS로 색조와 표시 영역을 조절합니다.
+
+- 소개 화면의 구조도·모순행렬·S-커브·자료 표지: 이 프로젝트에서 직접 작성한 SVG와 CSS.
+- `public/images/genrich-altshuller.png`: [Altshuller Institute, Genrich Altshuller: Father of TRIZ](https://www.aitriz.org/altshuller/116-altshuller/775-genrich-altshuller)의 공개 인물 소개 사진. TRIZ 창시자를 설명하는 소개에 출처를 명시하여 사용하며, CC0 라이선스를 주장하지 않습니다.
+- TRIZ 소개 글은 MATRIZ 용어집과 Altshuller Institute 소개를 참고한 한국어 요약입니다. 본문 아래 문헌 링크를 제공합니다.
+- 76 표준해의 기술 요약은 MATRIZ와 Altshuller Foundation의 번호·변환 체계를 대조했습니다. 공식 번역이 아니며 적용 조건·한계는 별도로 작성한 설계 검토 메모입니다.
+
+- `public/images/technology-research.jpg`: Pavel Danilyuk, [Scientists Testing a Device](https://www.pexels.com/photo/scientists-testing-a-device-8439005/), [Pexels License](https://www.pexels.com/license/). 메인페이지에서 CSS로 표시 영역과 색조를 조정합니다.
+- `public/images/business-collaboration.jpg`: Tiger Lily, [A Group of People Having a Meeting in the Office](https://www.pexels.com/photo/a-group-of-people-having-a-meeting-in-the-office-7108816/), [Pexels License](https://www.pexels.com/license/). 비즈니스 파라미터의 대표 사진이며 CSS로 표시 영역을 조정합니다.
+- 안내 캐릭터: 이 프로젝트에서 작성한 CSS 도형.
 - 분석 도식: `pilot/triz/visuals.py`가 구조화 데이터에서 생성하는 SVG입니다.
 - 아이콘: Lucide (`lucide-react`, ISC License). 라이선스 원문은 설치 패키지의 LICENSE에 있습니다.
 - 글꼴: Google Fonts의 DM Sans / Noto Sans KR (SIL Open Font License). 외부 글꼴을 불러오지 못하면 시스템 글꼴을 사용합니다.

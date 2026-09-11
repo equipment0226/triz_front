@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 
-const pages = {main:'Main',tool:'Tool 소개',solve:'Problem Solving',cases:'Sample Case',about:'About us'};
+const pages = {main:'Main',tool:'Introduction',solve:'Problem Solving',cases:'Sample Case',about:'About us'};
 const tabs = {analysis:'분석 현황',definition:'문제 정의',solutions:'해결안',report:'보고서',feedback:'피드백'};
 
 export function readRoute() {
@@ -13,7 +13,12 @@ export function readRoute() {
   const requestedTab = page === 'Sample Case' && params.get('tab') === 'analysis' ? '문제 정의' : tabs[params.get('tab')];
   const tab = allowedTabs.includes(requestedTab) ? requestedTab : defaultTab;
   const listPage = Number(params.get('listPage'));
-  return {page,run,tab,library:page === 'Problem Solving' && params.get('view') === 'history' && !run,
+  const introTab = page === pages.tool && params.get('topic') === 'triz' ? 'triz' : 'tool';
+  const chapter = page === pages.tool && introTab === 'tool' && /^0[1-4]$/.test(params.get('chapter')) ? params.get('chapter') : null;
+  const material = page === pages.tool && introTab === 'tool' ? params.get('material') || null : null;
+  const standard = material === 'standards' && /^[1-5]\.[1-5]\.\d{1,2}$/.test(params.get('standard')) ? params.get('standard') : null;
+  const principle = material === 'principles' && /^(?:[1-9]|[1-3]\d|40)$/.test(params.get('principle')) ? params.get('principle') : null;
+  return {page,run,tab,introTab,chapter,material,standard,principle,library:page === 'Problem Solving' && params.get('view') === 'history' && !run,
     listPage:Number.isSafeInteger(listPage) && listPage > 0 ? listPage : 1, search:params.get('search') || ''};
 }
 
@@ -21,6 +26,15 @@ function routeUrl(route) {
   const params = new URLSearchParams();
   const slug = Object.keys(pages).find(key => pages[key] === route.page) || 'main';
   if(slug !== 'main') params.set('page',slug);
+  if(slug === 'tool') {
+    if(route.introTab === 'triz') params.set('topic','triz');
+    else {
+      if(route.chapter) params.set('chapter',route.chapter);
+      if(route.material) params.set('material',route.material);
+      if(route.material === 'standards' && route.standard) params.set('standard',route.standard);
+      if(route.material === 'principles' && route.principle) params.set('principle',route.principle);
+    }
+  }
   if(['solve','cases'].includes(slug)) {
     if(route.run) {
       params.set('run',route.run);

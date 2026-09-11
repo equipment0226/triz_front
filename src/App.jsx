@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import {
   ArrowUpRight,
   ArrowRight,
@@ -25,7 +25,8 @@ import {
   Send,
 } from "lucide-react";
 import { Brand, Loading, ScrollToTop } from "./components/Shared";
-import { Home, Introduction } from "./pages/Marketing";
+import { Home } from "./pages/Marketing";
+const Introduction = lazy(() => import('./pages/Introduction'));
 import { Workspace } from "./pages/Workspace";
 import { History } from "./pages/History";
 import { Login } from "./pages/Account";
@@ -34,7 +35,7 @@ import { Notifications } from './components/Notifications';
 import { useNavigation } from './lib/navigation';
 const nav = [
   "Main",
-  "Tool 소개",
+  "Introduction",
   "Problem Solving",
   "Sample Case",
   "About us",
@@ -109,9 +110,9 @@ export default function App() {
       )}
       <main>
         {page === "Main" ? (
-          <Home solve={solve} learn={() => goPage("Tool 소개")} />
-        ) : page === "Tool 소개" ? (
-          <Introduction solve={solve} />
+          <Home solve={solve} learn={() => goPage("Introduction")} />
+        ) : page === "Introduction" ? (
+          <Suspense fallback={<Loading text="소개 자료를 불러오고 있어요." />}><Introduction solve={solve} route={route} onNavigate={navigate} /></Suspense>
         ) : page === "Problem Solving" ? (
           auth.loading ? <Loading text="로그인 상태를 확인하고 있어요." /> : !auth.user ? <Login auth={auth} seed={seed} /> : <>
           <div className="workspace-nav"><button className="button subtle" onClick={() => solve()}>새 문제 분석</button>
@@ -141,7 +142,7 @@ export default function App() {
           </div>
         )}
       </main>
-      {((page === 'Problem Solving' && auth.user) || publicRun) && <ScrollToTop />}
+      {((page === 'Problem Solving' && auth.user) || publicRun || page === 'Introduction') && <ScrollToTop />}
       <footer>
         <Brand />
         <span>모순에서 시작해, 가능성으로.</span>

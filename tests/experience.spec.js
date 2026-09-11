@@ -12,7 +12,7 @@ test('notifications arrive across pages, defer once, and open the response tab',
   let requests=[];
   await page.route('**/api/notifications',r=>r.fulfill({json:requests}));
   await page.goto('/');
-  await page.getByRole('button',{name:'Tool 소개',exact:true}).click();
+  await page.getByRole('button',{name:'Introduction',exact:true}).click();
   requests=[{id:'request-1',run_id:'r1',project_title:project.title,title:'샘플링 조건 확인'}];
   await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
   await expect(page.getByRole('dialog')).toContainText(project.title);
@@ -82,7 +82,8 @@ test('technical photos load and reduced motion disables continuous effects',asyn
   await page.goto('/');await page.locator('.sample-grid').scrollIntoViewIfNeeded();
   await expect.poll(()=>page.locator('.sample-art img').evaluateAll(images=>images.every(i=>i.complete&&i.naturalWidth>0))).toBe(true);
   await page.emulateMedia({reducedMotion:'reduce'});
-  await expect(page.locator('.core-shape')).toHaveCSS('animation-name','none');
+  await expect(page.locator('.core-shape')).toHaveCount(0);
+  await expect(page.locator('.hero-research-photo')).toBeVisible();
   await page.getByRole('button',{name:'Problem Solving',exact:true}).click();
   await expect(page.locator('.bot')).toHaveCSS('animation-name','none');
   await expect(page.locator('.tree-speech')).toContainText('관찰한 현상');

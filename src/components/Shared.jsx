@@ -170,31 +170,17 @@ export function SearchStatus({ status = {} }) {
 
 export function HeroArt() {
   return (
-    <div
-      className="hero-art"
-      aria-label="모순을 새로운 해결안으로 연결하는 TRIZ 개념도"
-      role="img"
-    >
-      <div className="art-grid" />
-      <div className="orbit orbit-one" />
-      <div className="orbit orbit-two" />
-      <div className="orbit orbit-three" />
+    <figure className="hero-art hero-photo">
+      <img className="hero-research-photo" src="/images/technology-research.jpg" alt="연구자들이 로봇 장치를 함께 검토하며 기술 문제를 해결하는 모습" width="1400" height="935" fetchPriority="high"/>
       <div className="art-label top">
         <span className="dot" /> A NEW WAY TO THINK
       </div>
       <div className="glass-card conflict">
         <CircleDot size={17} />
         <span>
-          기술/물리 모순 정의<span className="muted">TRIZ 해결기법 적용</span>
+          다양한 산업/직군의 문제점<span className="muted">TRIZ 해결기법 적용</span>
         </span>
         <span className="small-line" />
-      </div>
-      <div className="core-shape">
-        <div />
-        <div />
-        <div />
-        <div />
-        <div />
       </div>
       <div className="art-label bottom">
         CONTRADICTION <ArrowRight size={16} /> POSSIBILITY
@@ -208,9 +194,8 @@ export function HeroArt() {
         </div>
         <ArrowUpRight size={20} />
       </div>
-      <span className="orbit-dot d1" />
-      <span className="orbit-dot d2" />
-    </div>
+      <figcaption className="hero-photo-credit">사진: <SafeLink href="https://www.pexels.com/photo/scientists-testing-a-device-8439005/">Pavel Danilyuk / Pexels</SafeLink></figcaption>
+    </figure>
   );
 }
 

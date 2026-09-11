@@ -5,13 +5,15 @@
 .reveal-ready{opacity:0;transform:translateY(22px);transition:opacity .75s ease var(--reveal-delay,0ms),transform .75s cubic-bezier(.2,.7,.2,1) var(--reveal-delay,0ms)}
 .reveal-ready.revealed{opacity:1;transform:translateY(0)}
 .hero-art{box-shadow:0 25px 70px #31492b0c;isolation:isolate}
-.hero-art .core-shape{animation:core-float 8s ease-in-out infinite}
-.hero-art .core-shape div{animation:layer-light 6s ease-in-out infinite alternate}
-.hero-art .core-shape div:nth-child(2){animation-delay:-1s}.hero-art .core-shape div:nth-child(4){animation-delay:-3s}
-.hero-art .orbit-one{animation:orbit-drift 28s linear infinite}.hero-art .orbit-two{animation:orbit-drift 36s linear infinite reverse;animation-delay:-8s}
-.hero-art .orbit-three{animation:orbit-drift 44s linear infinite;animation-delay:-15s}
-.hero-art .glass-card{animation:card-float 7s ease-in-out infinite}.hero-art .solution{animation-delay:-3s}
-.hero-art .orbit-dot{animation:glow 4s ease-in-out infinite}.hero-art .d2{animation-delay:-2s}
+.hero-photo{margin:0;background:#263b38}
+.hero-research-photo{width:100%;height:100%;object-fit:cover;object-position:55% center;display:block;filter:saturate(.7)}
+.hero-photo:after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,#152b3240,transparent 36%,#152b325e)}
+.hero-photo .art-label{z-index:1;color:#f8fbf4;letter-spacing:1.2px;text-shadow:0 1px 4px #10262080}
+.hero-photo .conflict{top:66px;left:20px;padding:13px 15px;font-size:11px}
+.hero-photo .solution{right:18px;bottom:65px;padding:13px 15px}
+.hero-photo-credit{position:absolute;bottom:10px;right:18px;font-size:8px;color:#e4eee7;z-index:2}
+.hero-photo-credit a{text-decoration:underline;text-underline-offset:3px}
+@media(max-width:500px){.hero-photo .conflict{left:14px;top:57px;padding:11px;font-size:10px}.hero-photo .solution{right:14px;bottom:60px;font-size:10px}.hero-photo .art-label{left:16px;font-size:7px}.hero-photo .art-label.bottom{bottom:29px}}
 .sample-art{position:relative;overflow:hidden;background:#14272d!important;isolation:isolate}
 .sample-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:transform .75s;filter:saturate(.8) contrast(1.04)}
 .sample-art:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,#081e32a6);pointer-events:none}
