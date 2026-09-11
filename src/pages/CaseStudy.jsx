@@ -4,7 +4,7 @@ import { ReportSections, Empty, Loading } from "../components/Shared";
 import { Solutions } from "./Workspace";
 import { ProblemDefinition } from "../components/ProblemDefinition";
 
-export function CaseStudy({ runId, back, solve, tab = "보고서", onTabChange: setTab }) {
+export function CaseStudy({ runId, back, solve, tab = "문제 정의", onTabChange: setTab }) {
   const [view, setView] = useState(null), [error, setError] = useState("");
   useEffect(() => {
     let cancelled = false;

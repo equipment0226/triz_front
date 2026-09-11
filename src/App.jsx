@@ -129,7 +129,7 @@ export default function App() {
           }</>
         ) : page === "Sample Case" ? (
           publicRun ? <CaseStudy key={publicRun} runId={publicRun} tab={tab} onTabChange={changeTab} back={() => navigate(r => ({...r,run:null}), {scrollTop:true})} solve={solve} /> :
-            <History publicView page={listPage} term={search} onNavigate={listChange} openRun={id => navigate(r => ({...r,run:id,tab:'보고서'}), {scrollTop:true})} onError={setError} />
+            <History publicView page={listPage} term={search} onNavigate={listChange} openRun={id => navigate(r => ({...r,run:id,tab:'문제 정의'}), {scrollTop:true})} onError={setError} />
         ) : (
           <div className="about">
             <p className="eyebrow">ABOUT US</p>

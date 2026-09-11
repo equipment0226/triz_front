@@ -8,7 +8,7 @@ export function readRoute() {
   const page = pages[params.get('page')] || 'Main';
   const projectPage = ['Problem Solving','Sample Case'].includes(page);
   const run = projectPage ? params.get('run') || null : null;
-  const defaultTab = page === 'Sample Case' ? '보고서' : '분석 현황';
+  const defaultTab = page === 'Sample Case' ? '문제 정의' : '분석 현황';
   const allowedTabs = page === 'Sample Case' ? ['문제 정의','해결안','보고서'] : Object.values(tabs);
   const requestedTab = page === 'Sample Case' && params.get('tab') === 'analysis' ? '문제 정의' : tabs[params.get('tab')];
   const tab = allowedTabs.includes(requestedTab) ? requestedTab : defaultTab;
@@ -24,7 +24,7 @@ function routeUrl(route) {
   if(['solve','cases'].includes(slug)) {
     if(route.run) {
       params.set('run',route.run);
-      params.set('tab',Object.keys(tabs).find(key => tabs[key] === route.tab) || (slug === 'cases' ? 'report' : 'analysis'));
+      params.set('tab',Object.keys(tabs).find(key => tabs[key] === route.tab) || (slug === 'cases' ? 'definition' : 'analysis'));
     } else if(slug === 'solve' && route.library) params.set('view','history');
     if(route.listPage > 1) params.set('listPage',String(route.listPage));
     if(route.search) params.set('search',route.search);

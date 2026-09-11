@@ -25,10 +25,10 @@ test('back, forward and refresh restore project tabs and the list page',async({p
   await expect(page).toHaveURL(/tab=report/);
   await page.getByRole('button',{name:'Sample Case',exact:true}).click();
   await page.locator('.history-row').click();
-  await expect(page.getByRole('tab',{name:'보고서',exact:true})).toHaveAttribute('aria-selected','true');
+  await expect(page.getByRole('tab',{name:'문제 정의',exact:true})).toHaveAttribute('aria-selected','true');
   await page.getByRole('tab',{name:'해결안',exact:true}).click();
   await page.goBack();
-  await expect(page.getByRole('tab',{name:'보고서',exact:true})).toHaveAttribute('aria-selected','true');
+  await expect(page.getByRole('tab',{name:'문제 정의',exact:true})).toHaveAttribute('aria-selected','true');
   await page.goBack();
   await expect(page.locator('.history-row')).toBeVisible();
   await page.goBack();

@@ -62,6 +62,7 @@ test('both report screens keep centered tables, semantic colors and compact mode
   await verify();
   await page.getByRole('button',{name:'Sample Case',exact:true}).click();
   await page.getByRole('button',{name:/반도체 세정/}).click();
+  await page.getByRole('tab',{name:'보고서',exact:true}).click();
   await verify();
 });
 test.beforeEach(async ({ page }) => {
@@ -268,7 +269,8 @@ test("public pages remain accessible and solving requires Google login", async (
   await page.getByRole("button", { name: "Sample Case", exact: true }).click();
   await expect(page.getByRole("heading", { name: "모두의 분석 사례" })).toBeVisible();
   await page.getByRole("button", { name: /반도체 세정 성능과 패턴 손상/ }).click();
-  await expect(page.getByText("공개 문제 정의")).toBeVisible();
+  await expect(page.getByRole("tab", { name: "문제 정의", exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByText(run.problem, { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "보고서 다운로드" })).toHaveCount(0);
   await expect(page.getByRole("tab", { name: "분석 도식" })).toHaveCount(0);
   await page.getByRole("tab", { name: "문제 정의", exact: true }).click();

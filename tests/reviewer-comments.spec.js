@@ -14,7 +14,7 @@ test('private and sample cards keep totals and reveal unchanged references only 
   const view = {run_id:'comments-run',title:'권한 위임 개선',query:'승인 지연',status:'COMPLETED',stage_index:1,
     stages:[{key:'done',label:'분석 완료',index:0}],industry:'비즈니스',system:'팀 운영',guide:'완료',
     constraints:[],reviewers:[],report_sections:[],report_ready:true,pending:null,figures:[],additions:[],
-    solutions:[{key:'C1',title:'승인 범위 명시',summary:'작은 팀에서 검증',description:'권한과 책임을 함께 정합니다.',
+    solutions:[{key:'cb-123456',number:2,display_label:'해결안2 (승인 범위 명시)',title:'승인 범위 명시',summary:'작은 팀에서 검증',description:'권한과 책임을 함께 정합니다.',
       mechanism:'책임자 승인',effect:'승인 지연 감소',score:3.5,rank:1,verdict:'조건 확인 필요',
       dimensions:{TIME:3,COST:3,GOAL:4,RESOLUTION:4,CAUSAL:3,SAFETY:2,' safety ':1,'안전':1},reviewer_comments:comments,
       assumptions:[],transfer_conditions:[],validation:[],risks:[],evidence:[],reference_cards:references}]};
@@ -28,6 +28,9 @@ test('private and sample cards keep totals and reveal unchanged references only 
       await page.goto(path);
       const card=page.locator('.solution-card');
       await expect(card).toBeVisible();
+      await expect(card.getByRole('heading', {name:'해결안2 (승인 범위 명시)'})).toBeVisible();
+      await expect(card.locator('.solution-number')).toHaveText('02');
+      await expect(page.locator('body')).not.toContainText('cb-123456');
       await expect(card.locator('.score')).toHaveText('3.5 / 5');
       await expect(card.locator('.reviewer-comments')).toHaveCount(0);
       await expect(card.locator('meter')).toHaveCount(0);

@@ -599,7 +599,7 @@ function HumanInput({ pending, busy, submit }) {
       {pending.kind === "DECIDE" &&
         (p.conditional || []).map((c) => (
           <div className="decision" key={c.concept_id}>
-            <h4>{c.title}</h4>
+            <h4>{c.display_label || c.title}</h4>
             <p>{c.mitigation}</p>
             <label>
               진행 판단
@@ -658,7 +658,7 @@ export function Solutions({ view }) {
         <article className="panel solution-card" key={c.key}>
           <div className="solution-top">
             <span className="solution-number">
-              {c.rank === 99 ? "추가 도출" : String(i + 1).padStart(2, "0")}
+              {c.rank === 99 ? "추가 도출" : String(c.number || i + 1).padStart(2, "0")}
             </span>
             <span className="pill">{c.verdict}</span>
             {c.score !== null && (
@@ -668,7 +668,7 @@ export function Solutions({ view }) {
               </span>
             )}
           </div>
-          <h2>{c.title}</h2>
+          <h2>{c.display_label || c.title}</h2>
           <p className="lead-small">{c.summary}</p>
           <p>{c.description}</p>
           <div className="mechanism">
@@ -776,9 +776,9 @@ function Feedback({ solutions, submit, busy }) {
       {solutions.map((c) => (
         <div className="feedback-row" key={c.key}>
           <label>
-            {c.title}
+            {c.display_label || c.title}
             <select
-              aria-label={c.title + " 평가"}
+              aria-label={(c.display_label || c.title) + " 평가"}
               value={ratings[c.key] || ""}
               onChange={(e) =>
                 setRatings({ ...ratings, [c.key]: e.target.value })
@@ -793,7 +793,7 @@ function Feedback({ solutions, submit, busy }) {
             </select>
           </label>
           <input
-            aria-label={c.title + " 의견"}
+            aria-label={(c.display_label || c.title) + " 의견"}
             value={comments[c.key] || ""}
             onChange={(e) =>
               setComments({ ...comments, [c.key]: e.target.value })

@@ -57,6 +57,7 @@ test('both libraries paginate 20 records and label every analysis mode',async({p
 test('sample tabs share spacing and hide patent status',async({page})=>{
   await page.route('**/api/public/runs?*',r=>r.fulfill({json:{items:[project],page:1,total:1,page_size:20}}));
   await page.goto('/');await page.getByRole('button',{name:'Sample Case',exact:true}).click();await page.locator('.history-row').click();
+  await expect(page.getByRole('tab',{name:'문제 정의',exact:true})).toHaveAttribute('aria-selected','true');
   for(const name of ['문제 정의','해결안','보고서']){
     await page.getByRole('tab',{name,exact:true}).click();
     const nav=await page.getByRole('tablist').boundingBox(),content=await page.locator('.case-tab-content').boundingBox();
@@ -73,6 +74,8 @@ test('sample tabs share spacing and hide patent status',async({page})=>{
   await page.reload();
   await expect(page.getByRole('tab',{name:'문제 정의',exact:true})).toHaveAttribute('aria-selected','true');
   await page.goto('/?page=cases&run=r1&tab=analysis');
+  await expect(page.getByRole('tab',{name:'문제 정의',exact:true})).toHaveAttribute('aria-selected','true');
+  await page.goto('/?page=cases&run=r1');
   await expect(page.getByRole('tab',{name:'문제 정의',exact:true})).toHaveAttribute('aria-selected','true');
 });
 test('technical photos load and reduced motion disables continuous effects',async({page})=>{
