@@ -18,7 +18,8 @@ export function readRoute() {
   const material = page === pages.tool && introTab === 'tool' ? params.get('material') || null : null;
   const standard = material === 'standards' && /^[1-5]\.[1-5]\.\d{1,2}$/.test(params.get('standard')) ? params.get('standard') : null;
   const principle = material === 'principles' && /^(?:[1-9]|[1-3]\d|40)$/.test(params.get('principle')) ? params.get('principle') : null;
-  return {page,run,tab,introTab,chapter,material,standard,principle,library:page === 'Problem Solving' && params.get('view') === 'history' && !run,
+  const effect = material === 'effects' && /^\d+\.\d+$/.test(params.get('effect')) ? params.get('effect') : null;
+  return {page,run,tab,introTab,chapter,material,standard,principle,effect,library:page === 'Problem Solving' && params.get('view') === 'history' && !run,
     listPage:Number.isSafeInteger(listPage) && listPage > 0 ? listPage : 1, search:params.get('search') || ''};
 }
 
@@ -33,6 +34,7 @@ function routeUrl(route) {
       if(route.material) params.set('material',route.material);
       if(route.material === 'standards' && route.standard) params.set('standard',route.standard);
       if(route.material === 'principles' && route.principle) params.set('principle',route.principle);
+      if(route.material === 'effects' && route.effect) params.set('effect',route.effect);
     }
   }
   if(['solve','cases'].includes(slug)) {

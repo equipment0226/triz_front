@@ -180,17 +180,66 @@ test('guide pages stay readable on mobile and every material route opens', async
   await page.screenshot({path:'test-results/introduction-mobile.png',fullPage:true});
 });
 
+test('effects explorer exposes the whole catalogue and keeps search and direct links coherent', async ({ page }) => {
+  await page.goto('/?page=tool&chapter=03&material=effects');
+  await expect(page.locator('.effect-function-toggle')).toHaveCount(19);
+  await expect(page.locator('.effect-leaf')).toHaveCount(0);
+  await expect(page.locator('.library-entry,.library-more')).toHaveCount(0);
+  for(const branch of await page.locator('.effect-function-toggle').all()) await branch.click();
+  await expect(page.locator('.effect-leaf')).toHaveCount(200);
+  await page.getByLabel('자료 검색').fill('ESC');
+  await expect(page.locator('.effect-leaf')).toHaveCount(1);
+  await page.locator('.effect-leaf').click();
+  await expect(page).toHaveURL(/chapter=03&material=effects&effect=1.4/);
+  await expect(page.locator('.effect-reading h2')).toContainText('ESC');
+  await page.reload();
+  await expect(page.locator('.effect-leaf.selected')).toContainText('ESC');
+  await expect(page.locator('.effect-reading h2')).toContainText('ESC');
+  await page.locator('.effect-paging a').last().click();
+  await expect(page).toHaveURL(/effect=1.5/);
+  await page.goBack();
+  await expect(page.locator('.effect-reading h2')).toContainText('ESC');
+  await page.screenshot({path:'test-results/effects-explorer-desktop.png',fullPage:true});
+  await page.getByLabel('자료 분류').selectOption('BIOLOGICAL');
+  await expect(page.locator('.effect-reading h2')).not.toContainText('ESC');
+  await page.locator('.effect-leaf').first().click();
+  await expect(page.locator('.effect-reading-heading')).toContainText('생물');
+  await page.getByLabel('자료 검색').fill('zzzz-no-effect');
+  await expect(page.locator('.effect-leaf')).toHaveCount(0);
+  await expect(page.getByRole('heading',{name:'일치하는 자료가 없습니다.'})).toBeVisible();
+  await page.getByRole('button',{name:'검색 초기화'}).click();
+  await expect(page.locator('.effect-function-toggle')).toHaveCount(19);
+});
+
+test('effects explorer mobile opens a readable detail and returns to its selected leaf', async ({ page }) => {
+  await page.setViewportSize({width:390,height:844});
+  await page.goto('/?page=tool&material=effects&effect=1.4');
+  await expect(page.locator('.effect-reading h2')).toContainText('ESC');
+  await expect(page.locator('.effects-tree')).toBeHidden();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+  await expect(page.locator('.effect-reading tr')).toHaveCount(4);
+  await page.screenshot({path:'test-results/effects-explorer-mobile.png',fullPage:true});
+  await page.locator('.effect-reading .standard-mobile-back').click();
+  await expect(page.locator('.effects-tree')).toBeVisible();
+  await page.locator('.effect-leaf.selected').click();
+  await expect(page.locator('.effects-tree')).toBeHidden();
+  await expect(page.locator('.effect-reading')).toBeVisible();
+  await page.reload();
+  await expect(page.locator('.effect-reading h2')).toContainText('ESC');
+  await page.goBack();
+});
+
 test('reference refinements keep effects concise and distinguish ARIZ choices', async ({ page }) => {
   await page.goto('/?page=tool');
   await expect(page.locator('.human-label')).toContainText('질문, 검토');
   await expect(page.locator('.ai-label')).toContainText('구조화, 분석, 아이디어 도출');
   await page.goto('/?page=tool&material=effects');
   await page.getByLabel('자료 검색').fill('ESC');
-  await expect(page.locator('.library-entry')).toHaveCount(1);
-  await page.locator('.library-entry summary').click();
-  await expect(page.locator('.entry-body tr th')).toHaveText(['자료 식별자','요구 기능','작동 원리','필요 조건']);
-  await expect(page.locator('.entry-body')).toContainText('1.4');
-  await expect(page.locator('.entry-body')).toContainText('밀착·고정');
+  await expect(page.locator('.effect-leaf')).toHaveCount(1);
+  await page.locator('.effect-leaf').click();
+  await expect(page.locator('.effect-reading tr th')).toHaveText(['자료 식별자','요구 기능','작동 원리','필요 조건']);
+  await expect(page.locator('.effect-reading')).toContainText('1.4');
+  await expect(page.locator('.effect-reading')).toContainText('밀착·고정');
   await expect(page.locator('.effect-transformation,.effect-variants')).toHaveCount(0);
   await page.goto('/?page=tool&material=trends');
   await expect(page.locator('.library-hero svg circle')).toHaveCount(0);
