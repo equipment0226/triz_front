@@ -188,7 +188,7 @@ test('effects explorer exposes the whole catalogue and keeps search and direct l
   await expect(page.locator('.effect-leaf')).toHaveCount(0);
   await expect(page.locator('.library-entry,.library-more')).toHaveCount(0);
   for(const branch of await page.locator('.effect-function-toggle').all()) await branch.click();
-  await expect(page.locator('.effect-leaf')).toHaveCount(200);
+  await expect(page.locator('.effect-leaf')).toHaveCount(knowledge.effects.reduce((sum,group)=>sum+group.effects.length,0));
   await page.getByLabel('자료 검색').fill('ESC');
   await expect(page.locator('.effect-leaf')).toHaveCount(1);
   await page.locator('.effect-leaf').click();
