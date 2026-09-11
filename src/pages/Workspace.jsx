@@ -599,7 +599,7 @@ function HumanInput({ pending, busy, submit }) {
       {pending.kind === "DECIDE" &&
         (p.conditional || []).map((c) => (
           <div className="decision" key={c.concept_id}>
-            <h4>{c.display_label || c.title}</h4>
+            <h4>{c.title || c.display_label}</h4>
             <p>{c.mitigation}</p>
             <label>
               진행 판단
@@ -668,7 +668,7 @@ export function Solutions({ view }) {
               </span>
             )}
           </div>
-          <h2>{c.display_label || c.title}</h2>
+          <h2>{c.title || c.display_label}</h2>
           <p className="lead-small">{c.summary}</p>
           <p>{c.description}</p>
           <div className="mechanism">
@@ -776,9 +776,9 @@ function Feedback({ solutions, submit, busy }) {
       {solutions.map((c) => (
         <div className="feedback-row" key={c.key}>
           <label>
-            {c.display_label || c.title}
+            {c.title || c.display_label}
             <select
-              aria-label={(c.display_label || c.title) + " 평가"}
+              aria-label={(c.title || c.display_label) + " 평가"}
               value={ratings[c.key] || ""}
               onChange={(e) =>
                 setRatings({ ...ratings, [c.key]: e.target.value })
@@ -793,7 +793,7 @@ function Feedback({ solutions, submit, busy }) {
             </select>
           </label>
           <input
-            aria-label={(c.display_label || c.title) + " 의견"}
+            aria-label={(c.title || c.display_label) + " 의견"}
             value={comments[c.key] || ""}
             onChange={(e) =>
               setComments({ ...comments, [c.key]: e.target.value })

@@ -211,6 +211,7 @@ test("report embeds diagrams, separates feedback and hides missing evidence noti
           {
             key: "CPT-hidden-id",
             title: "시간 분리 세정",
+            display_label: "해결안1 (시간 분리 세정)",
             summary: "세정과 지지 분리",
             description: "세정 작용을 시간에 따라 분리합니다.",
             mechanism: "시간 분리",
@@ -251,6 +252,7 @@ test("report embeds diagrams, separates feedback and hides missing evidence noti
     page.getByRole("link", { name: "보고서 다운로드", exact: true }),
   ).toHaveAttribute("href", "/api/runs/run-test/report?format=html");
   await page.getByRole("button", { name: "해결안", exact: true }).click();
+  await expect(page.locator('.solution-card h2')).toHaveText('시간 분리 세정');
   await expect(page.getByText("추가 도출", { exact: true })).toBeVisible();
   await expect(page.locator("body")).not.toContainText("근거를 아직 확보하지 못했습니다");
   await expect(page.locator(".reference-card")).toHaveCount(2);

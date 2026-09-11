@@ -31,6 +31,28 @@ try {
   await page.getByLabel('자료 검색').fill('2.4.12');
   await page.locator('.standard-leaf').click();
   assert.ok((await page.locator('.standard-reading').innerText()).includes('전기유변'));
+  await page.waitForFunction(()=>{const img=document.querySelector('.standard-specific-diagram img');return img?.complete&&img.naturalWidth>0;});
+  assert.equal(await page.locator('.standard-specific-diagram img').getAttribute('src'),'/diagrams/standards/2.4.12.svg');
+  const standardCodes=['1.2.3','2.4.12','4.5.2','5.4.2','5.5.3'];
+  for(const code of standardCodes) {
+    const response=await page.request.get(base+`/diagrams/standards/${code}.svg`);
+    assert.equal(response.status(),200);
+    assert.ok((await response.text()).includes(`data-standard-code="${code}"`));
+  }
+  await page.goto(base+'/?page=tool&material=separation');
+  for(const entry of await page.locator('.library-entry').all()) {
+    await entry.locator('summary').click();
+    assert.equal(await entry.locator('[data-active=true]').count(),1);
+    assert.equal(await entry.locator('[data-active=false] rect[fill="#fff"]').count(),3);
+  }
+  await page.goto(base+'/?page=tool&material=ariz');
+  await page.locator('.library-entry summary').first().waitFor();
+  for(const summary of await page.locator('.library-entry summary').all()) await summary.click();
+  assert.equal(await page.locator('.ariz-part-diagram').count(),9);
+  assert.equal(await page.locator('.ariz-diagram-steps li').count(),41);
+  await page.goto(base+'/?page=tool&material=business');
+  await page.getByRole('img',{name:'서류가방과 문서로 표현한 비즈니스 문제 분석'}).waitFor();
+  assert.equal(await page.locator('.business-hero-photo').count(),0);
   await page.goto(base+'/?page=tool&material=matrix');
   await page.locator('.principle-links a').filter({hasText:'#15 '}).click();
   await page.waitForFunction(()=>document.querySelector('#material-principles-15')?.open);

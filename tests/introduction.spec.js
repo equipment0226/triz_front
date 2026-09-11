@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+const knowledge=JSON.parse(readFileSync(new URL('../src/data/knowledge.json',import.meta.url),'utf8'));
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/auth/session', route => route.fulfill({json:{configured:false,user:null}}));
@@ -256,8 +258,8 @@ test('reference refinements keep effects concise and distinguish ARIZ choices', 
   expect(await required.evaluate(e=>getComputedStyle(e).backgroundColor)).not.toBe(await optional.evaluate(e=>getComputedStyle(e).backgroundColor));
   await page.goto('/?page=tool&material=business');
   await expect(page.locator('.library-context')).toHaveText('비즈니스 Triz 전용 파라미터입니다. 공학용 모순행렬과 별도 체계의 분석을 적용합니다.');
-  await expect.poll(()=>page.locator('.business-hero-photo img').evaluate(img=>img.complete&&img.naturalWidth>0)).toBe(true);
-  await expect(page.locator('.library-hero svg.guide-visual')).toHaveCount(0);
+  await expect(page.locator('.business-hero-photo')).toHaveCount(0);
+  await expect(page.getByRole('img',{name:'서류가방과 문서로 표현한 비즈니스 문제 분석'})).toBeVisible();
   await page.screenshot({path:'test-results/business-desktop.png',fullPage:true});
   await page.goto('/');
   await expect.poll(()=>page.locator('.hero-research-photo').evaluate(img=>img.complete&&img.naturalWidth>0)).toBe(true);
@@ -279,4 +281,51 @@ test('introduction cards respond to hover and respect reduced motion', async ({ 
   await page.goto('/?page=tool&material=principles');
   await page.locator('.library-entry summary').first().click();
   await expect(page.locator('.entry-body').first()).toHaveCSS('animation-name','none');
+});
+
+test('all standard detail URLs load their own reference drawing',async({page})=>{
+  test.setTimeout(90000);
+  const sources=new Set();
+  for(const standard of knowledge.standards_76.standards) {
+    await page.goto(`/?page=tool&material=standards&standard=${standard.code}`);
+    const image=page.locator('.standard-specific-diagram img');
+    await expect(image).toHaveAttribute('src',`/diagrams/standards/${standard.code}.svg`);
+    await expect.poll(()=>image.evaluate(img=>img.complete&&img.naturalWidth>0)).toBe(true);
+    sources.add(await image.getAttribute('src'));
+  }
+  expect(sources.size).toBe(76);
+  await page.goto('/?page=tool&material=standards&standard=5.4.2');
+  await page.locator('.standard-specific-diagram img').scrollIntoViewIfNeeded();
+  await page.screenshot({path:'test-results/standard-critical-desktop.png',fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  await page.reload();
+  await expect(page.locator('.standard-specific-diagram img')).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+  await page.screenshot({path:'test-results/standard-critical-mobile.png',fullPage:true});
+});
+
+test('separation highlights just the selected axis and ARIZ draws its actual steps',async({page})=>{
+  await page.goto('/?page=tool&material=separation');
+  for(const entry of await page.locator('.library-entry').all()) {
+    await entry.locator('summary').click();
+    const id=(await entry.getAttribute('id')).replace('material-separation-','');
+    await expect(entry.locator('[data-active=true]')).toHaveAttribute('data-separation',id);
+    await expect(entry.locator('[data-active=true] rect')).toHaveAttribute('fill','#e4eccf');
+    for(const rect of await entry.locator('[data-active=false] rect').all()) await expect(rect).toHaveAttribute('fill','#fff');
+  }
+  await page.goto('/?page=tool&material=ariz');
+  for(const part of knowledge.ariz_85c.parts) {
+    const entry=page.locator(`#material-ariz-${part.id}`);
+    await entry.locator('summary').click();
+    await expect(entry.locator('.ariz-diagram-steps li')).toHaveCount(part.steps.length);
+    await expect(entry.locator('.ariz-step-top>span')).toHaveText(part.steps.map(step=>step.code));
+    await expect(entry.locator('.entry-body>svg.guide-visual')).toHaveCount(0);
+    await expect(entry.locator('.ariz-diagram-steps strong')).toHaveText(part.steps.map(step=>step.title));
+  }
+  await expect(page.locator('.library-hero>svg.guide-visual')).toHaveCount(1);
+  await page.locator('#material-ariz-5 .ariz-part-diagram').screenshot({path:'test-results/ariz-knowledge-desktop.png'});
+  await page.setViewportSize({width:390,height:844});
+  await page.locator('#material-ariz-5 .ariz-part-diagram').scrollIntoViewIfNeeded();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+  await page.locator('#material-ariz-5 .ariz-part-diagram').screenshot({path:'test-results/ariz-knowledge-mobile.png'});
 });
