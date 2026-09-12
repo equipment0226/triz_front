@@ -19,6 +19,9 @@ try {
   assert.ok((await page.locator('.human-label').innerText()).includes('질문, 검토'));
   assert.ok((await page.locator('.ai-label').innerText()).includes('구조화, 분석, 아이디어 도출'));
   assert.equal(await page.locator('.chapter-detail').count(),4);
+  const businessCover=page.locator('.material-cover').filter({has:page.getByRole('heading',{name:'비즈니스 파라미터',exact:true})});
+  assert.equal(await businessCover.locator('img').count(),0);
+  await businessCover.getByRole('img',{name:'서류가방과 문서로 표현한 비즈니스 문제 분석'}).waitFor();
   assert.equal(await page.getByRole('tab',{name:'Tool 소개',exact:true}).getAttribute('aria-selected'),'true');
   await page.getByRole('tab',{name:'TRIZ란?',exact:true}).click();
   await page.locator('.triz-prose').waitFor();
@@ -93,5 +96,5 @@ try {
   await page.locator('.chapter-detail').first().waitFor();
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   assert.deepEqual(errors,[]);
-  console.log(JSON.stringify({url:base+'/?page=tool',status:'VERIFIED',standards:76,effects:total,checks:['default tab','TRIZ portrait','four chapters','templates','standards','effect explorer and deep link','mobile']}));
+  console.log(JSON.stringify({url:base+'/?page=tool',status:'VERIFIED',standards:76,effects:total,checks:['default tab','TRIZ portrait','four chapters','business briefcase illustration on cover and detail','templates','standards','effect explorer and deep link','mobile']}));
 } finally {await browser.close();}

@@ -11,7 +11,7 @@ import '../introduction.css';
 export function MaterialCards({ go }) {
   return <div className="material-grid">{materialMeta.map(item => <GuideLink go={go} to={{material: item.id}} className="material-cover" key={item.id}>
     <div className="material-cover-top"><span>{item.en}</span><ArrowUpRight size={19}/></div>
-    {item.id === 'business' ? <img className="material-cover-photo" src="/images/business-collaboration.jpg" alt="데이터를 함께 검토하며 사업 문제를 논의하는 팀" loading="lazy"/> : <GuideVisual kind={item.visual} compact title={`${item.title} 개념도`}/>}
+    <GuideVisual kind={item.visual} compact title={item.id === 'business' ? '서류가방과 문서로 표현한 비즈니스 문제 분석' : `${item.title} 개념도`}/>
     <div className="material-cover-name"><h3>{item.title}</h3><span>{item.count}</span></div>
     <p>{item.description}</p><span className="material-open">자료 펼쳐보기 <ArrowRight size={15}/></span>
   </GuideLink>)}</div>;
