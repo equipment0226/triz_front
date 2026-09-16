@@ -24,7 +24,7 @@ test('four gates and optional version review do not add coordinator approval',as
   await page.getByRole('button',{name:'내 분석 이력',exact:true}).click();
   await page.getByRole('button',{name:/DLC 냉각수/}).click();
   await expect(page.getByRole('region',{name:'4개 게이트 진행 상황'})).toContainText('G4 검증·선택');
-  await expect(page.getByText('자동 조율: 열전달과 분리 원리 자동 탐색')).toBeVisible();
+  await expect(page.getByText('자동 조율: 열전달과 분리 원리 자동 탐색')).toHaveCount(0);
   await page.getByRole('button',{name:'피드백',exact:true}).click();
   await page.getByLabel('이유',{exact:true}).fill('냉각 에너지와 GPU 온도를 함께 측정할 필요가 있음');
   await page.getByRole('button',{name:'검토 의견 저장',exact:true}).click();

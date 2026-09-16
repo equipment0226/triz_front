@@ -6,7 +6,6 @@ export function AxProgress({ ax }) {
   if (!ax) return null;
   return <section className="panel" aria-label="4개 게이트 진행 상황">
     <div className="actions">{Object.entries(ax.gates).map(([key, gate]) => <span className="pill" key={key}>{key} {gate.label} · {labels[gate.status] || gate.status}</span>)}</div>
-    {ax.coordination.reason && <p>자동 조율: {ax.coordination.reason}</p>}
     {ax.selection.conditional?.length > 0 && <p>조건부 후보 {ax.selection.conditional.length}개 · 필요한 시험 결과를 확인한 뒤 적용을 판단해 주세요.</p>}
   </section>;
 }
