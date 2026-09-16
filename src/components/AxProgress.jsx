@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { api, post } from '../lib/api';
 
-const labels = { PASS: '완료', CONDITIONAL: '조건부', RUNNING: '진행 중', NOT_RUN: '예정', WAITING: '확인 중', INTERRUPTED: '중단' };
-export function AxProgress({ ax }) {
+// Gate outcomes stay in solution/report views; this card describes execution only.
+const labels = { PASS: '완료', CONDITIONAL: '검토 종료', RUNNING: '진행 중', NOT_RUN: '예정', WAITING: '입력 대기', INTERRUPTED: '중단' };
+export function AxProgress({ ax, currentStage, executionStatus }) {
   if (!ax) return null;
   return <section className="panel" aria-label="4개 게이트 진행 상황">
     <div className="actions">{Object.entries(ax.gates).map(([key, gate]) => <span className="pill" key={key}>{key} {gate.label} · {labels[gate.status] || gate.status}</span>)}</div>
-    {ax.selection.conditional?.length > 0 && <p>조건부 후보 {ax.selection.conditional.length}개 · 필요한 시험 결과를 확인한 뒤 적용을 판단해 주세요.</p>}
-    {ax.selection.shortfall > 0 && <p>목표 5개 중 {5-ax.selection.shortfall}개를 제안했습니다. 나머지는 추가 검토가 필요합니다.</p>}
-    {ax.selection.coverage_gaps?.length > 0 && <details><summary>추가 해결이 필요한 문제</summary><ul>{ax.selection.coverage_gaps.map(gap=><li key={gap.obligation_id}>{gap.description}</li>)}</ul></details>}
+    {currentStage && <p className="muted">현재 단계: {currentStage}{executionStatus && ` · ${executionStatus}`}</p>}
   </section>;
 }
 

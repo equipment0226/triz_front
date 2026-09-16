@@ -335,7 +335,7 @@ export function Workspace({ selected, seed, onCreated, onError, tab = "분석 �
           </div>
           {tab === "분석 현황" && (
             <>
-              <AxProgress ax={view.ax} />
+              <AxProgress ax={view.ax} currentStage={stageName} executionStatus={statusLabel[view.status]} />
               {view.pending && (
                 <HumanInput
                   key={view.pending.interrupt_id}
