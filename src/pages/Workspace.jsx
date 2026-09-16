@@ -27,6 +27,7 @@ import {
 import { api, post } from "../lib/api";
 import { SafeLink, Bot, Empty, ReportSections, ReferenceCard, TreeSpeech, Loading } from "../components/Shared";
 import { ProblemDefinition } from "../components/ProblemDefinition";
+import { AxProgress, AxReview } from "../components/AxProgress";
 const statusLabel = {
   CREATED: "분석 준비",
   QUEUED: "분석 대기",
@@ -334,6 +335,7 @@ export function Workspace({ selected, seed, onCreated, onError, tab = "분석 �
           </div>
           {tab === "분석 현황" && (
             <>
+              <AxProgress ax={view.ax} />
               {view.pending && (
                 <HumanInput
                   key={view.pending.interrupt_id}
@@ -460,6 +462,7 @@ export function Workspace({ selected, seed, onCreated, onError, tab = "분석 �
               <Empty text="분석과 검토를 마치면 도식과 근거를 담은 보고서가 완성됩니다." />
             ))}
           {tab === "피드백" && (view.report_ready ? <Feedback solutions={view.solutions} submit={payload => act("feedback", payload)} busy={busy} /> : <Empty text="분석과 보고서가 완성되면 해결안을 평가할 수 있습니다." />)}
+          {tab === "피드백" && view.ax && <AxReview runId={selected} ax={view.ax} onError={onError} />}
         </div>
       </div>
     </div>

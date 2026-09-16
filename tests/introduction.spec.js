@@ -284,7 +284,7 @@ test('introduction cards respond to hover and respect reduced motion', async ({ 
 });
 
 test('all standard detail URLs load their own reference drawing',async({page})=>{
-  test.setTimeout(90000);
+  test.setTimeout(180000); // 76 full navigations plus desktop/mobile screenshots on Windows.
   const sources=new Set();
   for(const standard of knowledge.standards_76.standards) {
     await page.goto(`/?page=tool&material=standards&standard=${standard.code}`);

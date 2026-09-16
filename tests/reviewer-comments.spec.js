@@ -28,7 +28,8 @@ test('private and sample cards keep totals and reveal unchanged references only 
       await page.goto(path);
       const card=page.locator('.solution-card');
       await expect(card).toBeVisible();
-      await expect(card.getByRole('heading', {name:'해결안2 (승인 범위 명시)'})).toBeVisible();
+      // The number has its own badge; the heading displays the authored title.
+      await expect(card.getByRole('heading', {name:'승인 범위 명시',exact:true})).toBeVisible();
       await expect(card.locator('.solution-number')).toHaveText('02');
       await expect(page.locator('body')).not.toContainText('cb-123456');
       await expect(card.locator('.score')).toHaveText('3.5 / 5');

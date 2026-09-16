@@ -6,6 +6,9 @@ export async function api(path, options = {}) {
     try {
       const error = await response.json();
       if (typeof error.detail === "string") message = error.detail;
+      if (response.status === 409 && error.detail?.snapshot_id) {
+        message = '검토 중 분석 버전이 변경되었습니다. 화면을 새로고침한 뒤 변경 내용을 확인해 주세요. 변경 항목: ' + (error.detail.changed || []).map(c => c.key).join(', ');
+      }
     } catch {}
     throw new Error(message);
   }
