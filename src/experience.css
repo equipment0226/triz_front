@@ -94,6 +94,7 @@ main>.workspace-nav,.section.workspace,.section.intake,.section.history,.section
   .stage-nav>button{width:auto;flex-shrink:0;white-space:nowrap;padding:9px}
 }
 @media(max-width:850px){.header nav{min-width:0;gap:clamp(3px,1.5vw,12px)}.header nav button{font-size:clamp(10px,2.7vw,11px);padding-inline:0}}
+@media(max-width:600px){.header nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));height:auto;gap:0;overflow:visible}.header nav button{min-width:0;min-height:38px;white-space:normal}}
 @media(max-width:700px){
   main>.workspace-nav{margin-top:18px;gap:8px}.workspace{padding-top:24px}.project-heading{gap:12px;margin-bottom:24px}
   .tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;margin:18px 0;overflow:visible;white-space:normal}
