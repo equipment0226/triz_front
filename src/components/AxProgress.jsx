@@ -7,6 +7,8 @@ export function AxProgress({ ax }) {
   return <section className="panel" aria-label="4개 게이트 진행 상황">
     <div className="actions">{Object.entries(ax.gates).map(([key, gate]) => <span className="pill" key={key}>{key} {gate.label} · {labels[gate.status] || gate.status}</span>)}</div>
     {ax.selection.conditional?.length > 0 && <p>조건부 후보 {ax.selection.conditional.length}개 · 필요한 시험 결과를 확인한 뒤 적용을 판단해 주세요.</p>}
+    {ax.selection.shortfall > 0 && <p>목표 5개 중 {5-ax.selection.shortfall}개를 제안했습니다. 나머지는 추가 검토가 필요합니다.</p>}
+    {ax.selection.coverage_gaps?.length > 0 && <details><summary>추가 해결이 필요한 문제</summary><ul>{ax.selection.coverage_gaps.map(gap=><li key={gap.obligation_id}>{gap.description}</li>)}</ul></details>}
   </section>;
 }
 

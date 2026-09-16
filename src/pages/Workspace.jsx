@@ -664,6 +664,7 @@ export function Solutions({ view }) {
               {c.rank === 99 ? "추가 도출" : String(c.number || i + 1).padStart(2, "0")}
             </span>
             <span className="pill">{c.verdict}</span>
+            {c.constraint_status && <span className="pill">{c.constraint_status}</span>}
             {c.score !== null && (
               <span className="score">
                 {c.score.toFixed(1)}
@@ -689,6 +690,7 @@ export function Solutions({ view }) {
             <summary>
               적용 조건과 검증 계획 <Plus size={16} />
             </summary>
+            {c.validation_missing?.length > 0 && <><b>추가 확인 사항</b><ul>{c.validation_missing.map((text,index)=><li key={index}>{text}</li>)}</ul></>}
             <ul>
               {c.assumptions.map((a, i) => (
                 <li key={i}>{a}</li>

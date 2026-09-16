@@ -4,7 +4,7 @@ import http from "node:http";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 
-test("production gateway authenticates, streams API requests, and isolates internal routes", async () => {
+test("production gateway authenticates, streams API requests, and isolates internal routes", { timeout: 30000 }, async () => {
   let received;
   const upstream = http.createServer(async (req, res) => {
     let body = ""; for await (const chunk of req) body += chunk;
@@ -22,7 +22,17 @@ test("production gateway authenticates, streams API requests, and isolates inter
       PUBLIC_ORIGIN: "http://localhost:8080", GOOGLE_CLIENT_ID: "", GOOGLE_CLIENT_SECRET: "", TRIZ_APP_TOKEN: "fixture-app-token" }, stdio: ["ignore", "pipe", "pipe"] });
   const timeout = setTimeout(() => child.kill(), 10000);
   try {
-    await once(child.stdout, "data");
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => done(new Error("Gateway startup timed out")), 10000);
+      const ready = () => done();
+      const exited = code => done(new Error(`Gateway exited before startup (code ${code})`));
+      const done = error => {
+        clearTimeout(timer);
+        child.stdout.off("data", ready); child.off("exit", exited); child.off("error", done);
+        error ? reject(error) : resolve();
+      };
+      child.stdout.once("data", ready); child.once("exit", exited); child.once("error", done);
+    });
     const base = `http://127.0.0.1:${port}`;
     const headers = { Cookie: "triz_session=fixture-session" };
     assert.equal((await fetch(base + "/healthz")).status, 200);
@@ -48,6 +58,7 @@ test("production gateway authenticates, streams API requests, and isolates inter
     assert.equal((await fetch(base + "/assets/missing.js", { headers })).status, 404);
   } finally {
     clearTimeout(timeout); child.kill();
+    upstream.closeAllConnections();
     await new Promise((resolve) => upstream.close(resolve));
   }
 });
