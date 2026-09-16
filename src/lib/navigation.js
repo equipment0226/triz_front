@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 
-const pages = {main:'Main',tool:'Introduction',solve:'Problem Solving',cases:'Sample Case',about:'About us'};
+const pages = {main:'Main',tool:'Introduction',solve:'Problem Solving',cases:'Sample Case',patent:'Patent (Test)',about:'About us'};
 const tabs = {analysis:'분석 현황',definition:'문제 정의',solutions:'해결안',report:'보고서',feedback:'피드백'};
 
 export function readRoute() {
@@ -19,7 +19,7 @@ export function readRoute() {
   const standard = material === 'standards' && /^[1-5]\.[1-5]\.\d{1,2}$/.test(params.get('standard')) ? params.get('standard') : null;
   const principle = material === 'principles' && /^(?:[1-9]|[1-3]\d|40)$/.test(params.get('principle')) ? params.get('principle') : null;
   const effect = material === 'effects' && /^\d+\.\d+$/.test(params.get('effect')) ? params.get('effect') : null;
-  return {page,run,tab,introTab,chapter,material,standard,principle,effect,library:page === 'Problem Solving' && params.get('view') === 'history' && !run,
+  return {...(page==='Patent (Test)'?{patentCase:params.get('case')||null,patentTab:params.get('section')||'발명정보',patentSourceRun:params.get('sourceRun')||null,patentConcept:params.get('concept')||null}:{}),page,run,tab,introTab,chapter,material,standard,principle,effect,library:page === 'Problem Solving' && params.get('view') === 'history' && !run,
     listPage:Number.isSafeInteger(listPage) && listPage > 0 ? listPage : 1, search:params.get('search') || ''};
 }
 
@@ -27,6 +27,12 @@ function routeUrl(route) {
   const params = new URLSearchParams();
   const slug = Object.keys(pages).find(key => pages[key] === route.page) || 'main';
   if(slug !== 'main') params.set('page',slug);
+  if(slug === 'patent') {
+    if(route.patentCase) params.set('case',route.patentCase);
+    if(route.patentTab) params.set('section',route.patentTab);
+    if(route.patentSourceRun) params.set('sourceRun',route.patentSourceRun);
+    if(route.patentConcept) params.set('concept',route.patentConcept);
+  }
   if(slug === 'tool') {
     if(route.introTab === 'triz') params.set('topic','triz');
     else {

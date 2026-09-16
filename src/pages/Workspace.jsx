@@ -202,7 +202,7 @@ function Intake({ seed, onCreated, onError }) {
   );
 }
 
-export function Workspace({ selected, seed, onCreated, onError, tab = "분석 현황", onTabChange: setTab }) {
+export function Workspace({ selected, seed, onCreated, onError, onPatent, tab = "분석 현황", onTabChange: setTab }) {
   const [view, setView] = useState(null),
     [busy, setBusy] = useState(false),
     [instruction, setInstruction] = useState(""),
@@ -434,7 +434,7 @@ export function Workspace({ selected, seed, onCreated, onError, tab = "분석 �
             </>
           )}
           {tab === "문제 정의" && <ProblemDefinition view={view} />}
-          {tab === "해결안" && <Solutions view={view} />}
+          {tab === "해결안" && <Solutions view={view} onPatent={onPatent ? conceptId=>onPatent(selected,conceptId) : undefined} />}
           {tab === "보고서" &&
             (view.report_ready ? (
               <>
@@ -650,7 +650,7 @@ function solutionReferences(view, c) {
   ]).filter(r => /^https?:\/\//i.test(r.url || ""));
 }
 
-export function Solutions({ view }) {
+export function Solutions({ view, onPatent }) {
   if (!view.solutions.length)
     return (
       <Empty text="모순을 분석한 뒤 실행 가능한 해결안을 이곳에 정리할게요." />
@@ -673,6 +673,7 @@ export function Solutions({ view }) {
             )}
           </div>
           <h2>{c.title || c.display_label}</h2>
+          {onPatent && <button className="button subtle" onClick={()=>onPatent(c.key)}>이 해결안으로 특허 초안 작성</button>}
           <p className="lead-small">{c.summary}</p>
           <p>{c.description}</p>
           <div className="mechanism">

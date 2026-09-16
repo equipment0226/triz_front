@@ -27,17 +27,21 @@ import {
 import { Brand, Loading, ScrollToTop } from "./components/Shared";
 import { Home } from "./pages/Marketing";
 const Introduction = lazy(() => import('./pages/Introduction'));
+const Patent = lazy(() => import('./pages/Patent'));
 import { Workspace } from "./pages/Workspace";
 import { History } from "./pages/History";
 import { Login } from "./pages/Account";
 import { CaseStudy } from "./pages/CaseStudy";
 import { Notifications } from './components/Notifications';
 import { useNavigation } from './lib/navigation';
+import {rememberPatentRoute,takePatentReturn,clearPatentReturn} from './lib/patentNavigation';
+import {canTestPatent} from './lib/patentAccess';
 const nav = [
   "Main",
   "Introduction",
   "Problem Solving",
   "Sample Case",
+  "Patent (Test)",
   "About us",
 ];
 export default function App() {
@@ -59,12 +63,17 @@ export default function App() {
     window.addEventListener("triz-session-expired", refresh);
     return () => window.removeEventListener("triz-session-expired", refresh);
   }, []);
+  useEffect(()=>{
+    if(auth.loading||!auth.user)return;
+    const pending=takePatentReturn();
+    if(pending&&page==='Problem Solving'&&!run&&!library)navigate(pending,{replace:true});
+  },[auth.loading,auth.user,page,run,library,navigate]);
   async function logout() {
     try {
       const response = await fetch("/auth/logout", { method: "POST" });
       if (!response.ok) throw new Error("로그아웃하지 못했습니다. 다시 시도해 주세요.");
       setAuth(a => ({ ...a, user: null })); setSeed("");
-      sessionStorage.removeItem("triz-draft"); goPage("Main");
+      sessionStorage.removeItem("triz-draft"); clearPatentReturn(); goPage("Main");
     } catch (e) { setError(e.message); }
   }
   function solve(query = "") {
@@ -98,7 +107,7 @@ export default function App() {
           ))}
         </nav>
         {auth.user ? <div className="account-menu"><Notifications key={auth.user.id || auth.user.email || auth.user.name} user={auth.user} openRun={openRun}/><span>{auth.user.name}</span><button className="button subtle" onClick={logout}>로그아웃</button></div> :
-          <button className="button dark nav-cta" onClick={() => solve()}>로그인 / 시작하기 <ArrowUpRight size={16} /></button>}
+          <button className="button dark nav-cta" onClick={() => {if(page==='Patent (Test)')rememberPatentRoute(route);solve();}}>로그인 / 시작하기 <ArrowUpRight size={16} /></button>}
       </header>
       {error && (
         <div className="error" role="alert">
@@ -126,11 +135,15 @@ export default function App() {
             seed={seed}
             onCreated={openRun}
             onError={setError}
+            onPatent={canTestPatent(auth.user)?(runId,conceptId)=>navigate({page:'Patent (Test)',patentSourceRun:runId,patentConcept:conceptId},{scrollTop:true}):undefined}
           />
           }</>
         ) : page === "Sample Case" ? (
           publicRun ? <CaseStudy key={publicRun} runId={publicRun} tab={tab} onTabChange={changeTab} back={() => navigate(r => ({...r,run:null}), {scrollTop:true})} solve={solve} /> :
             <History publicView page={listPage} term={search} onNavigate={listChange} openRun={id => navigate(r => ({...r,run:id,tab:'문제 정의'}), {scrollTop:true})} onError={setError} />
+        ) : page === "Patent (Test)" ? (
+          auth.loading ? <Loading text="로그인 상태를 확인하고 있어요." /> : !canTestPatent(auth.user) ? <p className="panel" role="status">준비 중 입니다.</p> :
+            <Suspense fallback={<Loading text="특허 초안을 불러오고 있어요." />}><Patent route={route} navigate={navigate}/></Suspense>
         ) : (
           <div className="about">
             <p className="eyebrow">ABOUT US</p>
