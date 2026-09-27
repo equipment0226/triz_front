@@ -19,7 +19,7 @@ export function readRoute() {
   const standard = material === 'standards' && /^[1-5]\.[1-5]\.\d{1,2}$/.test(params.get('standard')) ? params.get('standard') : null;
   const principle = material === 'principles' && /^(?:[1-9]|[1-3]\d|40)$/.test(params.get('principle')) ? params.get('principle') : null;
   const effect = material === 'effects' && /^\d+\.\d+$/.test(params.get('effect')) ? params.get('effect') : null;
-  return {...(page==='Patent (Test)'?{patentCase:params.get('case')||null,patentTab:params.get('section')||'발명정보',patentSourceRun:params.get('sourceRun')||null,patentConcept:params.get('concept')||null}:{}),page,run,tab,introTab,chapter,material,standard,principle,effect,library:page === 'Problem Solving' && params.get('view') === 'history' && !run,
+  return {...(page==='Patent (Test)'?{patentCase:params.get('case')||null,patentTab:params.get('section')||'보고서',patentSourceRun:params.get('sourceRun')||null,patentConcept:params.get('concept')||null}:{}),page,run,tab,introTab,chapter,material,standard,principle,effect,library:page === 'Problem Solving' && params.get('view') === 'history' && !run,
     listPage:Number.isSafeInteger(listPage) && listPage > 0 ? listPage : 1, search:params.get('search') || ''};
 }
 

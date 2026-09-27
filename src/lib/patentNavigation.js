@@ -1,6 +1,6 @@
 // Keep only a short-lived allowlisted route. Private answers stay on the server.
 const key='triz-patent-login-return';
-const tabs=['발명정보','질문','선행기술','청구범위','명세서·도면','검토·수정','내보내기'];
+const tabs=['보고서','분석·키워드','프로세스','발명정보','질문','선행기술','청구범위','명세서·도면','검토·수정','내보내기'];
 const identifier=value=>typeof value==='string'&&/^[a-zA-Z0-9_-]{1,160}$/.test(value)?value:undefined;
 export function rememberPatentRoute(route) {
   if(route.page!=='Patent (Test)')return;

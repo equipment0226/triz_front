@@ -144,6 +144,7 @@ test('structured claim editing shows changes and all opposing review findings',a
 test('unknown attachment facts stay unknown and saved owner facts restore',async({page})=>{
   const f=await fixture(page);
   await page.goto('/?page=patent&case=pat-fixture');
+  await page.getByRole('button',{name:'발명정보',exact:true}).click();
   await expect(page.getByLabel('우선권 주장 여부',{exact:true})).toHaveValue('unknown');
   await page.getByLabel('우선권 주장 여부',{exact:true}).selectOption('no');
   await page.getByLabel('출원인 성명 또는 명칭',{exact:true}).fill('출원인 직접 입력');

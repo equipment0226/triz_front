@@ -25,9 +25,10 @@ import {
   Send,
 } from "lucide-react";
 import { api, post } from "../lib/api";
+import { submitProblem } from '../lib/submission';
 import { SafeLink, Bot, Empty, ReportSections, ReferenceCard, TreeSpeech, Loading } from "../components/Shared";
 import { ProblemDefinition } from "../components/ProblemDefinition";
-import { AxProgress, AxReview } from "../components/AxProgress";
+import { AxReview } from "../components/AxProgress";
 const statusLabel = {
   CREATED: "분석 준비",
   QUEUED: "분석 대기",
@@ -37,15 +38,19 @@ const statusLabel = {
   FAILED: "재시도 필요",
   INTERRUPTED: "일시 중단",
 };
-function Intake({ seed, onCreated, onError }) {
+function Intake({ seed, onCreated, onError, userId }) {
   const [query, setQuery] = useState(seed),
     [mode, setMode] = useState("FULL"),
     [files, setFiles] = useState([]),
     [publicConsent, setPublicConsent] = useState(false),
     [busy, setBusy] = useState(false);
   const fileRef = useRef();
+  const submitting = useRef(false);
   async function submit(e) {
     e.preventDefault();
+    if (submitting.current || !query.trim() || !publicConsent) return;
+    submitting.current = true;
+    onError('');
     setBusy(true);
     try {
       const data = new FormData();
@@ -53,14 +58,21 @@ function Intake({ seed, onCreated, onError }) {
       data.append("mode", mode);
       data.append("public_consent", String(publicConsent));
       files.forEach((f) => data.append("files", f));
-      const res = await api("/runs", { method: "POST", body: data });
+      const res = await submitProblem(data, userId);
       onCreated(res.run_id);
+      window.dispatchEvent(new Event('triz-run-updated'));
     } catch (e) {
       onError(e.message);
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
   }
+  if (busy) return <div className="section workspace" aria-live="polite">
+    <p className="eyebrow">PROBLEM SOLVING</p>
+    <h1>문제 해결을 준비하고 있어요</h1>
+    <Loading text="입력한 문제를 접수하고 있습니다. 접수가 끝나면 분석 현황으로 이동합니다." />
+  </div>;
   return (
     <div className="section intake">
       <div className="section-top">
@@ -202,7 +214,7 @@ function Intake({ seed, onCreated, onError }) {
   );
 }
 
-export function Workspace({ selected, seed, onCreated, onError, onPatent, tab = "분석 현황", onTabChange: setTab }) {
+export function Workspace({ selected, seed, onCreated, onError, onPatent, userId, tab = "분석 현황", onTabChange: setTab }) {
   const [view, setView] = useState(null),
     [busy, setBusy] = useState(false),
     [instruction, setInstruction] = useState(""),
@@ -248,7 +260,7 @@ export function Workspace({ selected, seed, onCreated, onError, onPatent, tab = 
     }
   }
   if (!selected)
-    return <Intake seed={seed} onCreated={onCreated} onError={onError} />;
+    return <Intake seed={seed} onCreated={onCreated} onError={onError} userId={userId} />;
   if (!view)
     return (
 <Loading />
@@ -335,7 +347,6 @@ export function Workspace({ selected, seed, onCreated, onError, onPatent, tab = 
           </div>
           {tab === "분석 현황" && (
             <>
-              <AxProgress ax={view.ax} currentStage={stageName} executionStatus={statusLabel[view.status]} />
               {view.pending && (
                 <HumanInput
                   key={view.pending.interrupt_id}

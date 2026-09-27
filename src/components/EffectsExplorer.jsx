@@ -9,7 +9,7 @@ export function EffectsExplorer({ entries, allEntries, selectedId, go, chapter, 
   const [mobileDetail,setMobileDetail] = useState(Boolean(selectedId));
   const reading = useRef();
   const tree = useRef();
-  const selected = entries.find(entry => entry.key === selectedId);
+  const selected = entries.find(entry => entry.key === selectedId || entry.original?.legacy_ids?.includes(selectedId));
   const branches = useMemo(() => {
     const groups = new Map();
     for(const entry of entries) {
@@ -63,7 +63,7 @@ export function EffectsExplorer({ entries, allEntries, selectedId, go, chapter, 
         <div className="standard-title"><span>{selected.key}</span><h2>{selected.title}</h2></div>
         <div className="guide-table-scroll" tabIndex="0" role="region" aria-label="과학효과 상세"><table className="entry-table"><caption>{selected.title}</caption><tbody>{[['자료 식별자',selected.key],['요구 기능',selected.subtitle],['작동 원리',selected.original.principle],['필요 조건',selected.original.conditions]].map(([label,value]) => <tr key={label}><th scope="row">{label}</th><td>{value}</td></tr>)}</tbody></table></div>
         <div className="standard-paging effect-paging">{index > 0 ? <GuideLink go={choose} to={to(entries[index-1].key)}><ArrowLeft size={14}/><span><small>이전 효과 · {entries[index-1].key}</small>{entries[index-1].title}</span></GuideLink> : <span/>}{index < entries.length-1 ? <GuideLink go={choose} to={to(entries[index+1].key)}><span><small>다음 효과 · {entries[index+1].key}</small>{entries[index+1].title}</span><ArrowRight size={14}/></GuideLink> : <span/>}</div>
-      </article> : <div className="standard-welcome effect-welcome"><Atom size={36}/><p className="eyebrow">START WITH THE FUNCTION</p><h2>원하는 기능에서,<br/>작동하는 원리로.</h2><p>요구 기능을 펼치고 과학효과를 선택하세요.<br/>작동 원리와 필요한 조건을 함께 살펴볼 수 있습니다.</p>{selectedId && !allEntries.some(entry => entry.key === selectedId) && <p role="status">해당 식별자의 과학효과를 찾을 수 없습니다.</p>}<div className="effect-explorer-guide"><span>01 <b>기능 선택</b></span><ChevronRight size={14}/><span>02 <b>효과 탐색</b></span><ChevronRight size={14}/><span>03 <b>조건 확인</b></span></div><p className="effect-coverage">{new Set(allEntries.map(entry => entry.subtitle)).size}개 요구 기능 · {allEntries.length}개 과학효과</p></div>}
+      </article> : <div className="standard-welcome effect-welcome"><Atom size={36}/><p className="eyebrow">START WITH THE FUNCTION</p><h2>원하는 기능에서,<br/>작동하는 원리로.</h2><p>요구 기능을 펼치고 과학효과를 선택하세요.<br/>작동 원리와 필요한 조건을 함께 살펴볼 수 있습니다.</p>{selectedId && !allEntries.some(entry => entry.key === selectedId || entry.original?.legacy_ids?.includes(selectedId)) && <p role="status">해당 식별자의 과학효과를 찾을 수 없습니다.</p>}<div className="effect-explorer-guide"><span>01 <b>기능 선택</b></span><ChevronRight size={14}/><span>02 <b>효과 탐색</b></span><ChevronRight size={14}/><span>03 <b>조건 확인</b></span></div><p className="effect-coverage">{new Set(allEntries.map(entry => entry.subtitle)).size}개 요구 기능 · {allEntries.length}개 과학효과</p></div>}
     </section>
   </div>;
 }

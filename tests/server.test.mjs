@@ -45,7 +45,7 @@ test("production gateway authenticates, streams API requests, and isolates inter
     const callback = await fetch(base + "/auth/google/callback?state=forged&code=forged", { redirect: "manual" });
     assert.equal(callback.status, 303);
     assert.equal(callback.headers.get("location"), "/?page=solve&login_error=1");
-    const response = await fetch(base + "/api/runs?mode=FULL", { method: "POST", headers: { ...headers, "X-TRIZ-APP-TOKEN": "spoofed", "X-TRIZ-SESSION": "spoofed-session", "X-TRIZ-USER-ID": "spoofed-user" }, body: "payload" });
+    const response = await fetch(base + "/api/runs?mode=FULL", { method: "POST", headers: { ...headers, "Idempotency-Key": "submission-fixture", "X-TRIZ-APP-TOKEN": "spoofed", "X-TRIZ-SESSION": "spoofed-session", "X-TRIZ-USER-ID": "spoofed-user" }, body: "payload" });
     assert.equal(response.status, 201);
     assert.equal(received.url, "/api/runs?mode=FULL");
     assert.equal(received.body, "payload");
@@ -53,6 +53,7 @@ test("production gateway authenticates, streams API requests, and isolates inter
     assert.equal(received.headers.authorization, undefined);
     assert.equal(received.headers["x-triz-session"], "fixture-session");
     assert.equal(received.headers["x-triz-user-id"], undefined);
+    assert.equal(received.headers['idempotency-key'], 'submission-fixture');
     assert.equal((await fetch(base + "/api/runs", { method: "POST", headers: { ...headers, Origin: "https://untrusted.example" } })).status, 403);
     assert.equal((await fetch(base + "/internal/execute", { method: "POST", headers })).status, 405);
     assert.equal((await fetch(base + "/assets/missing.js", { headers })).status, 404);

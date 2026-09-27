@@ -1,8 +1,8 @@
 import React from "react";
 import { samples } from "../data/examples";
 
-export function Login({ auth, seed }) {
-  function remember() { sessionStorage.setItem("triz-draft", seed || ""); }
+export function Login({ auth, seed, onLogin }) {
+  function remember() { sessionStorage.setItem("triz-draft", seed || ""); onLogin?.(); }
   return <section className="section login-section">
     <div className="panel login-card">
       <p className="eyebrow">PROBLEM SOLVING</p>

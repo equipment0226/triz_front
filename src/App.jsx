@@ -36,6 +36,7 @@ import { Notifications } from './components/Notifications';
 import { useNavigation } from './lib/navigation';
 import {rememberPatentRoute,takePatentReturn,clearPatentReturn} from './lib/patentNavigation';
 import {canTestPatent} from './lib/patentAccess';
+import {clearSubmission} from './lib/submission';
 const nav = [
   "Main",
   "Introduction",
@@ -73,14 +74,17 @@ export default function App() {
       const response = await fetch("/auth/logout", { method: "POST" });
       if (!response.ok) throw new Error("로그아웃하지 못했습니다. 다시 시도해 주세요.");
       setAuth(a => ({ ...a, user: null })); setSeed("");
+      clearSubmission();
       sessionStorage.removeItem("triz-draft"); clearPatentReturn(); goPage("Main");
     } catch (e) { setError(e.message); }
   }
   function solve(query = "") {
+    clearSubmission();
     setSeed(query);
     navigate({page:'Problem Solving'}, {scrollTop:true});
   }
   function openRun(id) {
+    setError('');
     navigate(r => ({...r,page:'Problem Solving',run:id,library:false,tab:'분석 현황'}), {scrollTop:true});
   }
   return (
@@ -132,6 +136,7 @@ export default function App() {
             tab={tab}
             onTabChange={changeTab}
             selected={selected}
+            userId={auth.user.id || auth.user.email}
             seed={seed}
             onCreated={openRun}
             onError={setError}
