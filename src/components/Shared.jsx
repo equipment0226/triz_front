@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { memo, useState, useEffect, useRef, useMemo, useId } from "react";
+import { isLongReport, reportPages, sectionBlocks } from "../lib/reportPages";
+import { ReportDetails } from "./ReportDetails";
 import {
   ArrowUpRight,
   ArrowUp,
@@ -109,6 +111,9 @@ export function Brand() {
 
 export function Figure({ figure }) {
   const [zoom, setZoom] = useState(1);
+  const svg = useMemo(() => DOMPurify.sanitize(figure.svg, {
+    USE_PROFILES: { svg: true, svgFilters: true },
+  }), [figure.svg]);
   return (
     <figure className={`figure${figure.compact ? ' figure-compact' : ''}`}>
       <div className="figure-controls"><button onClick={() => setZoom(z => Math.max(1, z - .25))} disabled={zoom <= 1} aria-label="도식 축소">−</button>
@@ -118,9 +123,7 @@ export function Figure({ figure }) {
       <div
         className="figure-canvas" style={{ width: `${zoom * 100}%` }}
         dangerouslySetInnerHTML={{
-          __html: DOMPurify.sanitize(figure.svg, {
-            USE_PROFILES: { svg: true, svgFilters: true },
-          }),
+          __html: svg,
         }}
       />
       </div>
@@ -130,13 +133,54 @@ export function Figure({ figure }) {
   );
 }
 
+const ReportHtml = memo(function ReportHtml({ html }) {
+  const clean = useMemo(() => DOMPurify.sanitize(html || ''), [html]);
+  return <div className="report-prose" dangerouslySetInnerHTML={{__html: clean}} />;
+});
+
 export function ReportSections({ sections = [] }) {
-  return <div className="report-process">{sections.map(section => <section className="panel report-section" key={section.key}>
-    <h2>{section.title}</h2>
-    {(section.blocks || [{ type: "html", html: section.html || "" }, ...(section.figures || []).map(figure => ({ type: "figure", figure }))]).map((block, i) =>
-      block.type === "figure" ? <Figure key={block.figure.key} figure={block.figure} /> :
-        <div className="report-prose" key={i} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.html) }} />)}
-  </section>)}</div>;
+  const query = '(max-width: 900px), (pointer: coarse)';
+  const [mobile, setMobile] = useState(() => window.matchMedia(query).matches);
+  const [page, setPage] = useState(0);
+  const root = useRef(null), selectId = useId();
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const update = () => setMobile(media.matches);
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+  const paged = mobile && isLongReport(sections);
+  const pages = useMemo(() => paged ? reportPages(sections) : [], [sections, paged]);
+  const current = Math.min(page, Math.max(0, pages.length - 1));
+  const displayed = paged ? [pages[current]] : sections;
+  const changePage = value => {
+    setPage(value);
+    root.current?.scrollIntoView({block: 'start', behavior: 'instant'});
+    root.current?.focus({preventScroll: true});
+  };
+  const buttons = <div className="report-page-buttons">
+    <button className="button subtle" disabled={current === 0} onClick={() => changePage(current - 1)}>이전 페이지</button>
+    <span aria-live="polite">{current + 1} / {pages.length}</span>
+    <button className="button subtle" disabled={current === pages.length - 1} onClick={() => changePage(current + 1)}>다음 페이지</button>
+  </div>;
+  return <div className="report-process" ref={root} tabIndex={-1}>
+    {paged && <nav className="report-page-nav" aria-label="보고서 페이지 탐색">
+      <p>긴 보고서를 페이지로 나누어 표시합니다.</p>
+      <label htmlFor={selectId}>보고서 목차</label>
+      <select id={selectId} aria-label="보고서 페이지" value={current} onChange={e => changePage(Number(e.target.value))}>
+        {pages.map((part, i) => <option key={i} value={i}>{i + 1}. {part.title}{part.parts > 1 ? ` (${part.part}/${part.parts})` : ''}</option>)}
+      </select>
+      {buttons}
+    </nav>}
+    {displayed.map((section, index) => <section className="panel report-section" key={`${section.key}-${paged ? current : index}`}>
+      <h2>{section.title}{paged && section.parts > 1 && <small> ({section.part}/{section.parts})</small>}</h2>
+      {sectionBlocks(section).map((block, i) => block.type === 'figure'
+        ? <Figure key={i} figure={block.figure} /> : block.type === 'details'
+          ? <ReportDetails key={i} title={block.title}><ReportHtml html={block.html} /></ReportDetails>
+          : <ReportHtml key={i} html={block.html} />)}
+    </section>)}
+    {paged && <nav className="report-page-nav" aria-label="보고서 다음 페이지">{buttons}</nav>}
+  </div>;
 }
 
 export function ReferenceCard({ reference: r }) {

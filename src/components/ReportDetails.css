@@ -1,0 +1,6 @@
+.report-details{margin:16px 0;border:1px solid #dde5df;border-radius:8px;overflow:hidden}
+.report-details-heading{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;background:#f5f8f3}
+.report-details-heading strong{font-size:14px}
+.report-details-heading button{border:1px solid #cad9cf;border-radius:6px;background:#fff;color:#315d48;min-height:36px;padding:6px 14px;cursor:pointer;font-size:13px}
+.report-details-heading button:focus-visible{outline:2px solid #315d48;outline-offset:3px}
+.report-details-content{padding:4px 16px 12px;overflow-wrap:anywhere}

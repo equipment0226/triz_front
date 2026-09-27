@@ -19,12 +19,20 @@ for (const width of [1366, 390]) {
     await expect(page.locator('.solution-card')).toHaveCount(7);
     await page.getByRole('button', { name: '보고서', exact: true }).click();
     for (const title of ['1. 문제 정의', '2. 시스템 분석', '3. 문제 정의 (TRIZ)', '4. 해결책 도출 과정']) {
-      await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
+      if (width < 900) {
+        const value = await page.getByLabel('보고서 페이지', {exact:true}).locator('option').evaluateAll((options, title) => options.find(o => o.textContent.includes(title)).value, title);
+        await page.getByLabel('보고서 페이지', {exact:true}).selectOption(value);
+        await expect(page.locator('.report-section h2')).toContainText(title);
+      } else await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
     }
-    await expect(page.locator('svg[data-guide-kind]')).not.toHaveCount(0);
+    if (width > 900) await expect(page.locator('svg[data-guide-kind]')).not.toHaveCount(0);
     await expect(page.getByText(/^자동 조율:/)).toHaveCount(0);
     await page.reload();
     await page.getByRole('button', { name: '보고서', exact: true }).click();
+    if (width < 900) {
+      const value = await page.getByLabel('보고서 페이지', {exact:true}).locator('option').evaluateAll(options => options.find(o => o.textContent.includes('부록 C.')).value);
+      await page.getByLabel('보고서 페이지', {exact:true}).selectOption(value);
+    }
     await expect(page.getByRole('heading', { name: '부록 C. 추론 이력 (Step Trace)', exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
   });

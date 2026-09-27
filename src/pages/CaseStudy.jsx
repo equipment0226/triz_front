@@ -8,9 +8,12 @@ export function CaseStudy({ runId, back, solve, tab = "문제 정의", onTabChan
   const [view, setView] = useState(null), [error, setError] = useState("");
   useEffect(() => {
     let cancelled = false;
-    api(`/public/runs/${encodeURIComponent(runId)}/view`).then(data => { if (!cancelled) setView(data); })
+    const controller = new AbortController();
+    setView(null);
+    setError('');
+    api(`/public/runs/${encodeURIComponent(runId)}/view`, {signal: controller.signal}).then(data => { if (!cancelled) setView(data); })
       .catch(e => { if (!cancelled) setError(e.message); });
-    return () => { cancelled = true; };
+    return () => { cancelled = true; controller.abort(); };
   }, [runId]);
   return <section className="section public-case">
     <button className="button subtle" onClick={back}>← 전체 분석 사례</button>
@@ -20,8 +23,10 @@ export function CaseStudy({ runId, back, solve, tab = "문제 정의", onTabChan
 
       <div className="workspace-nav" role="tablist" aria-label="공개 분석 자료">{["문제 정의", "해결안", "보고서"].map(t =>
         <button key={t} role="tab" aria-selected={tab === t} className="button subtle" onClick={() => setTab(t)}>{t}</button>)}</div>
-      <div className="case-tab-content" key={tab}>
+      <div className="case-tab-content">
       {tab === "보고서" && (view.report_ready ? <>
+        <div className="actions"><a className="button subtle" href={`/api/public/runs/${encodeURIComponent(runId)}/report`} download>전체 보고서 다운로드</a></div>
+        <p className="hint">전체 문서 인쇄·PDF 저장은 내려받은 보고서에서 이용할 수 있습니다.</p>
         <ReportSections sections={view.report_sections} />
       </> : <Empty text="분석이 아직 완료되지 않았습니다. 현재까지의 해결안은 해결안 탭에서 확인할 수 있습니다." />)}
       {tab === "문제 정의" && <ProblemDefinition view={view} />}

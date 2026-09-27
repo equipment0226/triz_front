@@ -229,22 +229,28 @@ export function Workspace({ selected, seed, onCreated, onError, onPatent, userId
   };
   useEffect(() => {
     if (!selected) return;
-    let active = true;
+    let active = true, timer;
+    const controller = new AbortController();
     const update = async () => {
       try {
-        const v = await api(`/runs/${selected}/view`);
-        if (active) setView(v);
+        const v = await api(`/runs/${selected}/view`, {signal: controller.signal});
+        if (!active) return;
+        setView(v);
+        if (['RUNNING', 'QUEUED'].includes(v.status)) timer = setTimeout(update, 3000);
       } catch (e) {
-        if (active) onError(e.message);
+        if (active) {
+          onError(e.message);
+          timer = setTimeout(update, 3000);
+        }
       }
     };
     update();
-    const timer = setInterval(update, 3000);
     return () => {
       active = false;
-      clearInterval(timer);
+      clearTimeout(timer);
+      controller.abort();
     };
-  }, [selected]);
+  }, [selected, view?.status]);
   async function act(path, body = {}) {
     setBusy(true);
     try {
