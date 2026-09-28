@@ -16,7 +16,7 @@ async function mock(page, view = stress) {
   await page.route('**/api/**/view', r => r.fulfill({json:view}));
 }
 
-test('mobile long public report keeps every block reachable with bounded mounted content', async ({page}) => {
+test('mobile report keeps each complete chapter on one numbered page', async ({page}) => {
   test.setTimeout(90000);
   await page.setViewportSize({width:390,height:844});
   await mock(page);
@@ -27,7 +27,12 @@ test('mobile long public report keeps every block reachable with bounded mounted
   const chooser = page.getByLabel('보고서 페이지', {exact:true});
   await expect(chooser).toBeVisible();
   const values = await chooser.locator('option').evaluateAll(options => options.map(o => o.value));
-  expect(values.length).toBeGreaterThan(stressSections.length);
+  expect(values.length).toBe(stressSections.length);
+  await expect(page.getByLabel('장 바로가기').getByRole('button')).toHaveCount(stressSections.length);
+  await page.getByRole('button', {name:'2장으로 이동',exact:true}).click();
+  await expect(chooser).toHaveValue('1');
+  await expect(page.locator('[data-read-token="p-1-0"]')).toHaveCount(1);
+  await expect(page.locator('[data-read-token="p-1-7"]')).toHaveCount(1);
   const tokens = new Set(), figures = new Set();
   let peakNodes = 0;
   for (const value of values) {

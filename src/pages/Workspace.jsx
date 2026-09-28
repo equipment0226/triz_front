@@ -29,7 +29,7 @@ import { submitProblem } from '../lib/submission';
 import { continueWithRecovery } from '../lib/usageRecovery';
 import { SafeLink, Bot, Empty, ReportSections, ReferenceCard, TreeSpeech, Loading } from "../components/Shared";
 import { ProblemDefinition } from "../components/ProblemDefinition";
-import { AxReview } from "../components/AxProgress";
+import { AxReview, AdaptiveStatus } from "../components/AxProgress";
 const statusLabel = {
   CREATED: "분석 준비",
   QUEUED: "분석 대기",
@@ -44,6 +44,7 @@ function Intake({ seed, onCreated, onError, userId }) {
     [mode, setMode] = useState("FULL"),
     [files, setFiles] = useState([]),
     [publicConsent, setPublicConsent] = useState(false),
+    [trainingConsent, setTrainingConsent] = useState(false),
     [busy, setBusy] = useState(false);
   const fileRef = useRef();
   const submitting = useRef(false);
@@ -58,6 +59,7 @@ function Intake({ seed, onCreated, onError, userId }) {
       data.append("query", query);
       data.append("mode", mode);
       data.append("public_consent", String(publicConsent));
+      data.append('training_consent', trainingConsent ? 'PROJECT_ONLY' : 'NO_TRAINING');
       files.forEach((f) => data.append("files", f));
       const res = await submitProblem(data, userId);
       onCreated(res.run_id);
@@ -172,6 +174,8 @@ function Intake({ seed, onCreated, onError, userId }) {
           </fieldset>
           <label className="public-consent"><input type="checkbox" required checked={publicConsent} onChange={e => setPublicConsent(e.target.checked)} />
             무료 베타에서 입력한 문제·자료의 분석 내용·해결안·보고서가 Sample Case를 통해 비회원에게도 공개되는 데 동의합니다.</label>
+          <label><input type="checkbox" checked={trainingConsent} onChange={e=>setTrainingConsent(e.target.checked)} />
+            이 분석의 검토와 피드백을 내 프로젝트의 다음 분석 개선에 사용하도록 동의합니다. (선택)</label>
           <button
             disabled={busy || !query.trim() || !publicConsent}
             className="button dark full"
@@ -485,6 +489,7 @@ export function Workspace({ selected, seed, onCreated, onError, onPatent, userId
             ))}
           {tab === "피드백" && (view.report_ready ? <Feedback solutions={view.solutions} submit={payload => act("feedback", payload)} busy={busy} /> : <Empty text="분석과 보고서가 완성되면 해결안을 평가할 수 있습니다." />)}
           {tab === "피드백" && view.ax && <AxReview runId={selected} ax={view.ax} onError={onError} />}
+          {view.ax && <AdaptiveStatus ax={view.ax} />}
         </div>
       </div>
     </div>
@@ -497,7 +502,7 @@ function HumanInput({ pending, busy, submit }) {
   const [candidate, setCandidate] = useState(p.candidates?.[0]?.id || "");
   const [amend, setAmend] = useState("");
   const [decisions, setDecisions] = useState({});
-  const [effectReviews, setEffectReviews] = useState({});
+  const [trainingConsent, setTrainingConsent] = useState(false);
   const [industry, setIndustry] = useState(
     p.industry_profile?.industry_id || "",
   );
@@ -528,7 +533,7 @@ function HumanInput({ pending, busy, submit }) {
             ? { answers, industry_id: industry, difficulty }
             : pending.kind === "CONFIRM"
               ? { candidate_id: candidate, amendment: amend }
-              : { decisions, application_reviews: Object.values(effectReviews).filter(r => r.decision) },
+              : { decisions, training_consent: trainingConsent ? 'PROJECT_ONLY' : 'NO_TRAINING' },
         );
       }}
     >
@@ -643,39 +648,11 @@ function HumanInput({ pending, busy, submit }) {
                 <option value="drop">이번 제안에서 제외</option>
               </select>
             </label>
-            {(p.effect_applications || []).filter(a => a.candidate_id === c.concept_id).map(a => (
-              <details key={a.application_id}>
-                <summary>적용 조건 확인 (선택)</summary>
-                <p>확인 가능한 조건만 답해 주세요. 답변은 시험 결과와 구분해 기록합니다.</p>
-                {a.conditions.map(condition => {
-                  const key = `${a.application_id}:${condition.condition_id}`;
-                  const review = effectReviews[key] || {candidate_id: c.concept_id,
-                    effect_application_id: a.application_id, condition_id: condition.condition_id,
-                    training_consent: "NO_TRAINING"};
-                  const update = patch => setEffectReviews(prev => ({...prev, [key]: {...review, ...patch}}));
-                  return <div key={key}>
-                    <label>{condition.text}
-                      <select value={review.decision || ""} onChange={e => update({decision: e.target.value})}>
-                        <option value="">답변하지 않음</option>
-                        <option value="condition_confirmed">이 조건을 충족한다고 확인</option>
-                        <option value="condition_rejected">이 조건을 충족하지 않음</option>
-                        <option value="economics_rejected">비용 때문에 적용하기 어려움</option>
-                        <option value="unknown">확인할 수 없음</option>
-                      </select>
-                    </label>
-                    <label>조건 설명 (선택)
-                      <input value={review.comment || ""} onChange={e => update({comment: e.target.value})} />
-                    </label>
-                    <label><input type="checkbox" checked={review.training_consent === "PROJECT_ONLY"}
-                      onChange={e => update({training_consent: e.target.checked ? "PROJECT_ONLY" : "NO_TRAINING"})} />
-                      이 검토를 내 프로젝트의 다음 분석 개선에 사용하도록 동의
-                    </label>
-                  </div>;
-                })}
-              </details>
-            ))}
           </div>
         ))}
+      {pending.kind === 'DECIDE' && <label><input type="checkbox" checked={trainingConsent}
+        onChange={e => setTrainingConsent(e.target.checked)} />내 프로젝트의 다음 분석 개선에 이 선택을 사용하도록 동의 (선택)</label>}
+      {pending.kind === 'DECIDE' && <p className="muted">유지는 검토 가치가 있다는 의견입니다. 기술적 미확인 사항은 그대로 남습니다.</p>}
       <div className="actions">
         <button className="button dark" disabled={busy} type="submit">
           답변 전달하고 계속 <ArrowRight size={16} />
@@ -813,13 +790,15 @@ export function Solutions({ view, onPatent }) {
 function Feedback({ solutions, submit, busy }) {
   const [ratings, setRatings] = useState({}),
     [comments, setComments] = useState({}),
-    [saved, setSaved] = useState(false);
+    [saved, setSaved] = useState(false),
+    [trainingConsent, setTrainingConsent] = useState(false);
   return (
     <form
       className="panel"
       onSubmit={async (e) => {
         e.preventDefault();
         const success = await submit({
+          training_consent: trainingConsent ? 'PROJECT_ONLY' : 'NO_TRAINING',
           solution_feedback: solutions
             .filter((c) => ratings[c.key])
             .map((c) => ({
@@ -858,10 +837,13 @@ function Feedback({ solutions, submit, busy }) {
             onChange={(e) =>
               setComments({ ...comments, [c.key]: e.target.value })
             }
-            placeholder="현장 적용 가능성과 보완할 점을 알려 주세요."
+            placeholder="실제 적용 가능성과 보완할 점을 알려 주세요."
           />
         </div>
       ))}
+      <label><input type="checkbox" checked={trainingConsent} onChange={e => setTrainingConsent(e.target.checked)} />
+        내 프로젝트의 다음 분석 개선에 이 피드백을 사용하도록 동의 (선택)
+      </label>
       <button
         className="button dark"
         disabled={busy || !Object.values(ratings).some(Boolean)}

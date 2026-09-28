@@ -1,5 +1,5 @@
 import React, { memo, useState, useEffect, useRef, useMemo, useId } from "react";
-import { isLongReport, reportPages, sectionBlocks } from "../lib/reportPages";
+import { reportPages, sectionBlocks } from "../lib/reportPages";
 import { ReportDetails } from "./ReportDetails";
 import {
   ArrowUpRight,
@@ -149,7 +149,7 @@ export function ReportSections({ sections = [] }) {
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
-  const paged = mobile && isLongReport(sections);
+  const paged = mobile && sections.length > 1;
   const pages = useMemo(() => paged ? reportPages(sections) : [], [sections, paged]);
   const current = Math.min(page, Math.max(0, pages.length - 1));
   const displayed = paged ? [pages[current]] : sections;
@@ -165,7 +165,12 @@ export function ReportSections({ sections = [] }) {
   </div>;
   return <div className="report-process" ref={root} tabIndex={-1}>
     {paged && <nav className="report-page-nav" aria-label="보고서 페이지 탐색">
-      <p>긴 보고서를 페이지로 나누어 표시합니다.</p>
+      <p>한 페이지에 한 장씩 표시합니다.</p>
+      <div className="report-chapter-buttons" aria-label="장 바로가기">
+        {pages.map((part, i) => <button key={part.key || i} type="button"
+          aria-label={`${i + 1}장으로 이동`} aria-current={current === i ? 'page' : undefined}
+          onClick={() => changePage(i)}>{i + 1}</button>)}
+      </div>
       <label htmlFor={selectId}>보고서 목차</label>
       <select id={selectId} aria-label="보고서 페이지" value={current} onChange={e => changePage(Number(e.target.value))}>
         {pages.map((part, i) => <option key={i} value={i}>{i + 1}. {part.title}{part.parts > 1 ? ` (${part.part}/${part.parts})` : ''}</option>)}

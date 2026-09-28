@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 
-test('four gates and optional version review do not add coordinator approval',async({page})=>{
+test('current project journey and optional version review do not add coordinator approval',async({page})=>{
   const ax={snapshot_id:'snap-fixture',epoch:3,coordinator_hitl:false,
     gates:{G1:{label:'문제 정의',status:'PASS'},G2:{label:'문제 분석',status:'PASS'},G3:{label:'해결안 도출',status:'CONDITIONAL'},G4:{label:'검증·선택',status:'CONDITIONAL'}},
     coordination:{reason:'열전달과 분리 원리 자동 탐색'},selection:{conditional:['C1','C2','C3'],shortfall:2,
@@ -24,9 +24,11 @@ test('four gates and optional version review do not add coordinator approval',as
   await page.getByRole('button',{name:'Problem Solving',exact:true}).click();
   await page.getByRole('button',{name:'내 분석 이력',exact:true}).click();
   await page.getByRole('button',{name:/DLC 냉각수/}).click();
-  const progress=page.getByRole('region',{name:'4개 게이트 진행 상황'});
-  await expect(progress).toContainText('G4 검증·선택 · 검토 종료');
-  await expect(progress).toContainText('현재 단계: 피드백 반영 · 완료');
+  // The pinned baseline already replaced the unused AxProgress card with the journey.
+  const progress=page.getByRole('complementary');
+  await expect(progress).toContainText('피드백 반영');
+  await expect(page.getByText('완료 · 피드백 반영',{exact:true})).toBeVisible();
+  await expect(page.getByRole('region',{name:'4개 게이트 진행 상황'})).toHaveCount(0);
   await expect(progress).not.toContainText(/조건부|필요한 시험|적용을 판단|목표 5개|추가 검토|추가 해결|미해결 모순/);
   await expect(page.getByText('자동 조율: 열전달과 분리 원리 자동 탐색')).toHaveCount(0);
   await page.getByRole('button',{name:'피드백',exact:true}).click();
@@ -38,7 +40,7 @@ test('four gates and optional version review do not add coordinator approval',as
   expect(submitted.consent).toBe('NO_TRAINING');
 
   // Server state after reload must remain visible without exposing selection advice.
-  for(const [status,gateStatus,label,gateLabel] of [
+  for(const [status,gateStatus,label] of [
     ['RUNNING','RUNNING','분석 중','진행 중'],
     ['WAITING_HUMAN','WAITING','의견 확인','입력 대기'],
     ['INTERRUPTED','INTERRUPTED','일시 중단','중단'],
@@ -48,9 +50,9 @@ test('four gates and optional version review do not add coordinator approval',as
     ax.gates.G3.status=gateStatus;
     ax.gates.G4.status='NOT_RUN';
     await page.goto('/?page=solve&run=ax-fixture');
-    await expect(progress).toContainText(`현재 단계: 다중 기법 해결책 탐색 · ${label}`);
-    await expect(progress).toContainText(`G3 해결안 도출 · ${gateLabel}`);
-    await expect(progress).toContainText('G4 검증·선택 · 예정');
+    await expect(page.getByText(`${label} · 다중 기법 해결책 탐색`,{exact:true})).toBeVisible();
+    await expect(progress).toContainText('다중 기법 해결책 탐색');
+    await expect(progress).toContainText('피드백 반영');
     await expect(progress).not.toContainText(/조건부|필요한 시험|적용을 판단|목표 5개|추가 검토|추가 해결|미해결 모순|자동 조율/);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+2)).toBe(true);
   }

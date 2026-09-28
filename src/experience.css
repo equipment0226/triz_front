@@ -83,6 +83,9 @@
 .report-page-buttons .button{padding:10px 12px;font-size:12px}
 .report-page-buttons span{white-space:nowrap;font-size:12px}
 .report-page-buttons button:disabled{opacity:.4;cursor:default}
+.report-chapter-buttons{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;max-width:100%}
+.report-chapter-buttons button{flex:0 0 42px;min-height:42px;border:1px solid #c8d7c3;border-radius:8px;background:#fff;color:#294529;font:inherit}
+.report-chapter-buttons button[aria-current="page"]{background:#294529;color:#fff;border-color:#294529}
 .report-section h2 small{font-size:14px;font-weight:400;color:#596957}
 @media print{.report-page-nav{display:none}}
 .report-prose img{max-width:100%;height:auto}

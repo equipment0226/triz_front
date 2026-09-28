@@ -13,7 +13,7 @@ test.beforeEach(async ({page}) => {
 
 async function fill(page) {
   await page.getByLabel('해결하고 싶은 문제').fill('유리 기판의 코팅 균일도를 개선합니다.');
-  await page.getByRole('checkbox').check();
+  await page.getByRole('checkbox',{name:/무료 베타에서 입력한 문제/}).check();
 }
 
 test('one submit shows progress and opens the saved project even when dispatch failed', async ({page}) => {
