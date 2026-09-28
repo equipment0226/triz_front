@@ -16,6 +16,36 @@ async function mock(page, view = stress) {
   await page.route('**/api/**/view', r => r.fulfill({json:view}));
 }
 
+test('mobile chapter chooser numbers each entry once without changing report headings', async ({page}) => {
+  const cases = [
+    ['요약', '요약'],
+    ['1. 문제 정의', '문제 정의'],
+    ['2.시스템 분석', '시스템 분석'],
+    ['제3장 해결 방향', '해결 방향'],
+    ['4장 제약 검토', '제약 검토'],
+    ['5) 적용 계획', '적용 계획'],
+    ['(6) 검증 사항', '검증 사항'],
+    ['7.1. 상세 검토', '상세 검토'],
+    ['부록 A. 참고자료', '부록 A. 참고자료'],
+    ['3D 구조 검토', '3D 구조 검토'],
+    ['3.5 mm 간격 검토', '3.5 mm 간격 검토'],
+  ];
+  const sections = cases.map(([title], i) => ({key:`numbered-${i}`, title,
+    blocks:[{type:'html', html:`<p data-chapter="${i}">장 본문 ${i + 1}</p>`}]}));
+  await page.setViewportSize({width:390,height:844});
+  await mock(page, {...frozen, report_sections:sections});
+  await page.goto(`/?page=cases&run=${frozen.run_id}&tab=report`);
+  const chooser = page.getByLabel('보고서 페이지', {exact:true});
+  await expect(chooser.locator('option')).toHaveText(cases.map(([, label], i) => `${i + 1}. ${label}`));
+  await expect(page.getByLabel('장 바로가기').getByRole('button')).toHaveText(cases.map((_, i) => String(i + 1)));
+  for (const [i, [title]] of cases.entries()) {
+    await chooser.selectOption(String(i));
+    await expect(page.locator('.report-section h2')).toHaveText(title);
+    await expect(page.locator('.report-section [data-chapter]')).toHaveAttribute('data-chapter', String(i));
+    await expect(page.getByLabel('장 바로가기').locator('[aria-current="page"]')).toHaveText(String(i + 1));
+  }
+});
+
 test('mobile report keeps each complete chapter on one numbered page', async ({page}) => {
   test.setTimeout(90000);
   await page.setViewportSize({width:390,height:844});
@@ -71,6 +101,12 @@ test('full frozen report retains all figures across mobile pages and desktop vie
   await page.goto(`/?page=cases&run=${frozen.run_id}&tab=report`);
   const chooser = page.getByLabel('보고서 페이지',{exact:true});
   await expect(chooser).toBeVisible();
+  await expect(chooser.locator('option')).toHaveText([
+    '1. 요약 (Executive Summary)', '2. 문제 정의', '3. 시스템 분석', '4. 문제 정의 (TRIZ)',
+    '5. 해결책 도출 과정', '6. 제약조건 검토', '7. 최종 해결책 (우선순위순)', '8. 실행 로드맵',
+    '9. 한계 및 검증 필요사항', '10. 부록 A. 참고자료 (검색 기반)',
+    '11. 부록 C. 추론 이력 (Step Trace)', '12. 부록 D. 검증 상태와 분석 기록',
+  ]);
   const values = await chooser.locator('option').evaluateAll(options => options.map(o => o.value));
   const titles = [];
   for (const value of values) {

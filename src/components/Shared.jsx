@@ -1,5 +1,5 @@
 import React, { memo, useState, useEffect, useRef, useMemo, useId } from "react";
-import { reportPages, sectionBlocks } from "../lib/reportPages";
+import { reportPages, reportNavigationTitle, sectionBlocks } from "../lib/reportPages";
 import { ReportDetails } from "./ReportDetails";
 import {
   ArrowUpRight,
@@ -173,7 +173,7 @@ export function ReportSections({ sections = [] }) {
       </div>
       <label htmlFor={selectId}>보고서 목차</label>
       <select id={selectId} aria-label="보고서 페이지" value={current} onChange={e => changePage(Number(e.target.value))}>
-        {pages.map((part, i) => <option key={i} value={i}>{i + 1}. {part.title}{part.parts > 1 ? ` (${part.part}/${part.parts})` : ''}</option>)}
+        {pages.map((part, i) => <option key={i} value={i}>{i + 1}. {reportNavigationTitle(part.title)}{part.parts > 1 ? ` (${part.part}/${part.parts})` : ''}</option>)}
       </select>
       {buttons}
     </nav>}
