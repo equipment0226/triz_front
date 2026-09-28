@@ -492,6 +492,7 @@ function HumanInput({ pending, busy, submit }) {
   const [candidate, setCandidate] = useState(p.candidates?.[0]?.id || "");
   const [amend, setAmend] = useState("");
   const [decisions, setDecisions] = useState({});
+  const [effectReviews, setEffectReviews] = useState({});
   const [industry, setIndustry] = useState(
     p.industry_profile?.industry_id || "",
   );
@@ -522,7 +523,7 @@ function HumanInput({ pending, busy, submit }) {
             ? { answers, industry_id: industry, difficulty }
             : pending.kind === "CONFIRM"
               ? { candidate_id: candidate, amendment: amend }
-              : { decisions },
+              : { decisions, application_reviews: Object.values(effectReviews).filter(r => r.decision) },
         );
       }}
     >
@@ -637,6 +638,37 @@ function HumanInput({ pending, busy, submit }) {
                 <option value="drop">이번 제안에서 제외</option>
               </select>
             </label>
+            {(p.effect_applications || []).filter(a => a.candidate_id === c.concept_id).map(a => (
+              <details key={a.application_id}>
+                <summary>적용 조건 확인 (선택)</summary>
+                <p>확인 가능한 조건만 답해 주세요. 답변은 시험 결과와 구분해 기록합니다.</p>
+                {a.conditions.map(condition => {
+                  const key = `${a.application_id}:${condition.condition_id}`;
+                  const review = effectReviews[key] || {candidate_id: c.concept_id,
+                    effect_application_id: a.application_id, condition_id: condition.condition_id,
+                    training_consent: "NO_TRAINING"};
+                  const update = patch => setEffectReviews(prev => ({...prev, [key]: {...review, ...patch}}));
+                  return <div key={key}>
+                    <label>{condition.text}
+                      <select value={review.decision || ""} onChange={e => update({decision: e.target.value})}>
+                        <option value="">답변하지 않음</option>
+                        <option value="condition_confirmed">이 조건을 충족한다고 확인</option>
+                        <option value="condition_rejected">이 조건을 충족하지 않음</option>
+                        <option value="economics_rejected">비용 때문에 적용하기 어려움</option>
+                        <option value="unknown">확인할 수 없음</option>
+                      </select>
+                    </label>
+                    <label>조건 설명 (선택)
+                      <input value={review.comment || ""} onChange={e => update({comment: e.target.value})} />
+                    </label>
+                    <label><input type="checkbox" checked={review.training_consent === "PROJECT_ONLY"}
+                      onChange={e => update({training_consent: e.target.checked ? "PROJECT_ONLY" : "NO_TRAINING"})} />
+                      이 검토를 내 프로젝트의 다음 분석 개선에 사용하도록 동의
+                    </label>
+                  </div>;
+                })}
+              </details>
+            ))}
           </div>
         ))}
       <div className="actions">
