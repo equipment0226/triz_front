@@ -29,7 +29,7 @@ import { submitProblem } from '../lib/submission';
 import { continueWithRecovery } from '../lib/usageRecovery';
 import { SafeLink, Bot, Empty, ReportSections, ReferenceCard, TreeSpeech, Loading } from "../components/Shared";
 import { ProblemDefinition } from "../components/ProblemDefinition";
-import { AxReview, AdaptiveStatus } from "../components/AxProgress";
+import { AxReview } from "../components/AxProgress";
 const statusLabel = {
   CREATED: "분석 준비",
   QUEUED: "분석 대기",
@@ -486,7 +486,6 @@ export function Workspace({ selected, seed, onCreated, onError, onPatent, userId
             ))}
           {tab === "피드백" && (view.report_ready ? <Feedback solutions={view.solutions} submit={payload => act("feedback", payload)} busy={busy} /> : <Empty text="분석과 보고서가 완성되면 해결안을 평가할 수 있습니다." />)}
           {tab === "피드백" && view.ax && <AxReview runId={selected} ax={view.ax} onError={onError} />}
-          {tab !== "분석 현황" && view.ax && <AdaptiveStatus ax={view.ax} />}
         </div>
       </div>
     </div>

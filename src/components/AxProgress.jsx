@@ -11,23 +11,6 @@ export function AxProgress({ ax, currentStage, executionStatus }) {
   </section>;
 }
 
-export function AdaptiveStatus({ax}) {
-  if (ax?.run_contract?.version !== 'ax-run-v3') return null;
-  const coverage=ax.mode_coverage || {}, diagnostics=ax.diagnostics || {};
-  const names={A_MATRIX:'모순 행렬',B_SEPARATION:'분리 원리',C_STANDARDS:'표준해',D_ARIZ:'ARIZ',E_TRIMMING:'트리밍',F_TRENDS:'진화 경향',G_FOS:'기능 지향 탐색',H_EFFECTS:'과학효과'};
-  const reasons={NOT_SELECTED_BY_POLICY:'이번 탐색에서 생략',BLOCKED_MISSING_INPUT:'선행 입력 부족',NOT_RUN_BUDGET:'예산으로 미실행',FAILED:'실행 실패',NOT_APPLICABLE:'적용 대상 아님',PENDING:'선택 대기'};
-  const policy=diagnostics.policy_usage || {};
-  const money=value=>typeof value==='number' ? `$${(value/1e6).toFixed(4)}` : '확인 중';
-  return <section className="panel" aria-label="기법 선택과 학습 상태">
-    <h3>기법 선택과 학습 상태</h3>
-    <p>허용 기법: {(coverage.eligible_tracks || []).map(t=>names[t] || t).join(', ') || '확인 중'}</p>
-    <p>수행 기법: {(coverage.executed_tracks || []).map(t=>names[t] || t).join(', ') || '아직 없음'}</p>
-    <p>{Object.entries(coverage.omitted_tracks || {}).map(([t,status])=>`${names[t] || t}: ${reasons[status] || '확인 중'}`).join(' · ')}</p>
-    <p>{ax.run_contract.mode==='DEEP' ? '심층: 적용 가능한 전 기법 수행' : policy.selection_mode==='POLICY_DETERMINISTIC' ? '지원 범위 내 학습 정책으로 선택' : '명시적 규칙으로 선택'} · 학습: {({COLLECTING:'수집 중',SHADOW:'비교 관찰 중',DEPLOYED:'제한 적용'})[diagnostics.routing_readiness] || '수집 중'}</p>
-    <p>확정 비용 {money(diagnostics.actual_cost)} · 미확정 예약 {money(diagnostics.unresolved_reserve)} · 남은 한도 {money(diagnostics.remaining_budget)}</p>
-  </section>;
-}
-
 // Optional review after execution. This never pauses the coordinator.
 export function AxReview({ runId, ax, onError }) {
   const [snapshot, setSnapshot] = useState(null), [target, setTarget] = useState(''),
