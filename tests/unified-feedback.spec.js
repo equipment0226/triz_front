@@ -28,7 +28,7 @@ test('U01 U02 U11 U12 C12 keep, continue, final feedback and honest new-run stat
   await page.getByLabel('진행 판단').selectOption('accept');
   await page.getByRole('button',{name:'답변 전달하고 계속'}).click();
   await expect.poll(()=>writes.length).toBe(1);
-  expect(writes[0]).toMatchObject({decisions:{C1:'accept'},training_consent:'NO_TRAINING'});
+  expect(writes[0]).toEqual({decisions:{C1:'accept'}});
   expect(JSON.stringify(writes[0])).not.toContain('application_reviews');
   await page.getByRole('button',{name:'피드백',exact:true}).click();
   await expect(page.getByPlaceholder('실제 적용 가능성과 보완할 점을 알려 주세요.')).toBeVisible();
@@ -36,6 +36,7 @@ test('U01 U02 U11 U12 C12 keep, continue, final feedback and honest new-run stat
   await page.getByRole('button',{name:'피드백 저장',exact:true}).click();
   await expect.poll(()=>writes.length).toBe(2);
   expect(writes[1].solution_feedback[0]).toMatchObject({concept_id:'C1',rating:4});
+  expect(writes[1]).not.toHaveProperty('training_consent');
   view={...view,run_id:'next-run',status:'CREATED',pending:null,report_ready:false,solutions:[]};
   await page.goto('/?page=solve&run=next-run');
   await expect(page.getByRole('region',{name:'기법 선택과 학습 상태'})).toContainText('명시적 규칙으로 선택');

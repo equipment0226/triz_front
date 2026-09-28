@@ -44,7 +44,6 @@ function Intake({ seed, onCreated, onError, userId }) {
     [mode, setMode] = useState("FULL"),
     [files, setFiles] = useState([]),
     [publicConsent, setPublicConsent] = useState(false),
-    [trainingConsent, setTrainingConsent] = useState(false),
     [busy, setBusy] = useState(false);
   const fileRef = useRef();
   const submitting = useRef(false);
@@ -59,7 +58,6 @@ function Intake({ seed, onCreated, onError, userId }) {
       data.append("query", query);
       data.append("mode", mode);
       data.append("public_consent", String(publicConsent));
-      data.append('training_consent', trainingConsent ? 'PROJECT_ONLY' : 'NO_TRAINING');
       files.forEach((f) => data.append("files", f));
       const res = await submitProblem(data, userId);
       onCreated(res.run_id);
@@ -174,8 +172,7 @@ function Intake({ seed, onCreated, onError, userId }) {
           </fieldset>
           <label className="public-consent"><input type="checkbox" required checked={publicConsent} onChange={e => setPublicConsent(e.target.checked)} />
             무료 베타에서 입력한 문제·자료의 분석 내용·해결안·보고서가 Sample Case를 통해 비회원에게도 공개되는 데 동의합니다.</label>
-          <label><input type="checkbox" checked={trainingConsent} onChange={e=>setTrainingConsent(e.target.checked)} />
-            이 분석의 검토와 피드백을 내 프로젝트의 다음 분석 개선에 사용하도록 동의합니다. (선택)</label>
+          <p className="muted">검토와 피드백은 내 프로젝트의 다음 분석 개선에 기본 반영됩니다.</p>
           <button
             disabled={busy || !query.trim() || !publicConsent}
             className="button dark full"
@@ -502,7 +499,6 @@ function HumanInput({ pending, busy, submit }) {
   const [candidate, setCandidate] = useState(p.candidates?.[0]?.id || "");
   const [amend, setAmend] = useState("");
   const [decisions, setDecisions] = useState({});
-  const [trainingConsent, setTrainingConsent] = useState(false);
   const [industry, setIndustry] = useState(
     p.industry_profile?.industry_id || "",
   );
@@ -533,7 +529,7 @@ function HumanInput({ pending, busy, submit }) {
             ? { answers, industry_id: industry, difficulty }
             : pending.kind === "CONFIRM"
               ? { candidate_id: candidate, amendment: amend }
-              : { decisions, training_consent: trainingConsent ? 'PROJECT_ONLY' : 'NO_TRAINING' },
+              : { decisions },
         );
       }}
     >
@@ -650,8 +646,6 @@ function HumanInput({ pending, busy, submit }) {
             </label>
           </div>
         ))}
-      {pending.kind === 'DECIDE' && <label><input type="checkbox" checked={trainingConsent}
-        onChange={e => setTrainingConsent(e.target.checked)} />내 프로젝트의 다음 분석 개선에 이 선택을 사용하도록 동의 (선택)</label>}
       {pending.kind === 'DECIDE' && <p className="muted">유지는 검토 가치가 있다는 의견입니다. 기술적 미확인 사항은 그대로 남습니다.</p>}
       <div className="actions">
         <button className="button dark" disabled={busy} type="submit">
@@ -790,15 +784,13 @@ export function Solutions({ view, onPatent }) {
 function Feedback({ solutions, submit, busy }) {
   const [ratings, setRatings] = useState({}),
     [comments, setComments] = useState({}),
-    [saved, setSaved] = useState(false),
-    [trainingConsent, setTrainingConsent] = useState(false);
+    [saved, setSaved] = useState(false);
   return (
     <form
       className="panel"
       onSubmit={async (e) => {
         e.preventDefault();
         const success = await submit({
-          training_consent: trainingConsent ? 'PROJECT_ONLY' : 'NO_TRAINING',
           solution_feedback: solutions
             .filter((c) => ratings[c.key])
             .map((c) => ({
@@ -841,9 +833,6 @@ function Feedback({ solutions, submit, busy }) {
           />
         </div>
       ))}
-      <label><input type="checkbox" checked={trainingConsent} onChange={e => setTrainingConsent(e.target.checked)} />
-        내 프로젝트의 다음 분석 개선에 이 피드백을 사용하도록 동의 (선택)
-      </label>
       <button
         className="button dark"
         disabled={busy || !Object.values(ratings).some(Boolean)}

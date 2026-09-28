@@ -21,7 +21,8 @@ export async function submitProblem(data, userId) {
     hash: Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', await file.arrayBuffer())))
       .map(byte => byte.toString(16).padStart(2, '0')).join(''),
   })));
-  const fingerprint = JSON.stringify([userId, data.get('query').trim(), data.get('mode'), data.get('public_consent'), files]);
+  const fingerprint = JSON.stringify([userId, data.get('query').trim(), data.get('mode'), data.get('public_consent'), files,
+    data.get('training_consent') || 'PROJECT_ONLY']);
   const previous = read();
   const submission = previous?.fingerprint === fingerprint ? previous : { fingerprint, key: crypto.randomUUID() };
   // Persist before sending: a lost response or page reload must reuse this key.
