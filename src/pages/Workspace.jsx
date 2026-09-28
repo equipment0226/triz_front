@@ -486,7 +486,7 @@ export function Workspace({ selected, seed, onCreated, onError, onPatent, userId
             ))}
           {tab === "피드백" && (view.report_ready ? <Feedback solutions={view.solutions} submit={payload => act("feedback", payload)} busy={busy} /> : <Empty text="분석과 보고서가 완성되면 해결안을 평가할 수 있습니다." />)}
           {tab === "피드백" && view.ax && <AxReview runId={selected} ax={view.ax} onError={onError} />}
-          {view.ax && <AdaptiveStatus ax={view.ax} />}
+          {tab !== "분석 현황" && view.ax && <AdaptiveStatus ax={view.ax} />}
         </div>
       </div>
     </div>

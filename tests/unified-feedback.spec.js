@@ -39,6 +39,8 @@ test('U01 U02 U11 U12 C12 keep, continue, final feedback and honest new-run stat
   expect(writes[1]).not.toHaveProperty('training_consent');
   view={...view,run_id:'next-run',status:'CREATED',pending:null,report_ready:false,solutions:[]};
   await page.goto('/?page=solve&run=next-run');
+  await expect(page.getByRole('region',{name:'기법 선택과 학습 상태'})).toHaveCount(0);
+  await page.getByRole('button',{name:'피드백',exact:true}).click();
   await expect(page.getByRole('region',{name:'기법 선택과 학습 상태'})).toContainText('명시적 규칙으로 선택');
   await expect(page.getByRole('region',{name:'기법 선택과 학습 상태'})).toContainText('수집 중');
   await expect(page.getByText('ACTIVE_Q')).toHaveCount(0);
