@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { api, post } from "../lib/api";
 import { submitProblem } from '../lib/submission';
+import { continueWithRecovery } from '../lib/usageRecovery';
 import { SafeLink, Bot, Empty, ReportSections, ReferenceCard, TreeSpeech, Loading } from "../components/Shared";
 import { ProblemDefinition } from "../components/ProblemDefinition";
 import { AxReview } from "../components/AxProgress";
@@ -254,7 +255,11 @@ export function Workspace({ selected, seed, onCreated, onError, onPatent, userId
   async function act(path, body = {}) {
     setBusy(true);
     try {
-      await post(`/runs/${selected}/${path}`, body);
+      if (path === 'continue') {
+        if (!await continueWithRecovery(selected, {isAx: Boolean(view?.ax)})) return false;
+      } else {
+        await post(`/runs/${selected}/${path}`, body);
+      }
       await refresh();
       window.dispatchEvent(new Event('triz-run-updated'));
       return true;
