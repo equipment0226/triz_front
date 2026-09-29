@@ -47,7 +47,7 @@ test('every chapter presents techniques, diagrams and service template examples'
     await expect(page.locator('.technique-list')).not.toContainText('레포트 1.1');
     await expect(page.locator('.technique-list')).not.toContainText('학습용 템플릿으로 요약');
     for(const card of await cards.all()) {
-      await expect(card.locator('svg.guide-visual')).toHaveCount(1);
+      await expect(card.locator('.guide-visual')).toHaveCount(1);
       await expect(card.locator('table')).toHaveCount(1);
       await expect(card.locator('tbody tr')).not.toHaveCount(0);
       await expect(card.locator('.technique-flow li')).toHaveCount(3);
@@ -304,14 +304,15 @@ test('all standard detail URLs load their own reference drawing',async({page})=>
   await page.screenshot({path:'test-results/standard-critical-mobile.png',fullPage:true});
 });
 
-test('separation highlights just the selected axis and ARIZ draws its actual steps',async({page})=>{
+test('separation uses each approach diagram and ARIZ draws its actual steps',async({page})=>{
   await page.goto('/?page=tool&material=separation');
   for(const entry of await page.locator('.library-entry').all()) {
-    await entry.locator('summary').click();
+    await entry.locator(':scope > summary').click();
     const id=(await entry.getAttribute('id')).replace('material-separation-','');
-    await expect(entry.locator('[data-active=true]')).toHaveAttribute('data-separation',id);
-    await expect(entry.locator('[data-active=true] rect')).toHaveAttribute('fill','#e4eccf');
-    for(const rect of await entry.locator('[data-active=false] rect').all()) await expect(rect).toHaveAttribute('fill','#fff');
+    const image=entry.locator('img[data-separation]');
+    await expect(image).toHaveAttribute('data-separation',id);
+    await expect(image).toHaveAttribute('src',`/knowledge/separation/${id.toLowerCase()}.svg`);
+    await expect.poll(()=>image.evaluate(img=>img.complete&&img.naturalWidth>0)).toBe(true);
   }
   await page.goto('/?page=tool&material=ariz');
   for(const part of knowledge.ariz_85c.parts) {

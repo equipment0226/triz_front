@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, ChevronDown, ChevronRight, FileText, Folder, FolderOpen, Layers3 } from 'lucide-react';
 import { GuideLink } from './GuideLink';
-import { SafeLink } from './Shared';
+import { ReferenceSources, StandardDetailSections, StandardDiagram } from './StandardDetailSections';
 
 const subdivisions={
  '1.1':'물질–장 모델 구성','1.2':'유해 상호작용 제거',
@@ -55,9 +55,10 @@ export function StandardsExplorer({ collection, entries, selectedCode, go, chapt
         <button className="standard-mobile-back" onClick={backToTree}><ArrowLeft size={16}/> 탐색기로 돌아가기</button>
         <div className="standard-breadcrumb"><span>CLASS {selected.code[0]}</span><ChevronRight size={12}/><span>{subdivisions[selected.code.split('.').slice(0,2).join('.')]}</span><ChevronRight size={12}/><b>{selected.code}</b></div>
         <p className="eyebrow">STANDARD INVENTIVE SOLUTION</p><div className="standard-title"><span>{selected.code}</span><h2>{selected.title_ko}</h2></div><p className="standard-description">{selected.description}</p>
-        <div className="standard-transformation"><span>모델 변환</span><p>{selected.transformation}</p><figure className="standard-specific-diagram"><div className="standard-diagram-scroll" tabIndex="0" role="region" aria-label={`${selected.code} 표준해 구조도`}><img key={selected.code} src={`/diagrams/standards/${selected.code}.svg`} alt={`${selected.code} ${selected.title_ko}의 변환 전후 구조도`}/></div><figcaption>변환 전후의 개념 구조 · <a href={`/diagrams/standards/${selected.code}.svg`} target="_blank" rel="noopener noreferrer">구조도 크게 보기 ↗</a><small>작은 화면에서는 그림을 좌우로 움직여 볼 수 있습니다.</small></figcaption></figure></div>
-        <div className="guide-table-scroll" tabIndex="0" role="region" aria-label="표준해 적용 조건"><table className="entry-table"><caption>적용 조건과 검토할 한계</caption><tbody><tr><th scope="row">적용 조건</th><td>{selected.conditions}</td></tr><tr><th scope="row">한계 · 검토사항</th><td>{selected.limitations}</td></tr></tbody></table></div>
-        <div className="standard-reference"><span>원문 참고</span>{(selected.sources || collection.sources).map((s,i)=><SafeLink key={i} href={s.url}>{s.title} ↗</SafeLink>)}</div>
+        <div className="standard-transformation"><span>모델 변환</span><p>{selected.transformation}</p><StandardDiagram standard={selected}/></div>
+        <div className="guide-table-scroll" tabIndex="0" role="region" aria-label="표준해 적용 조건"><table className="entry-table"><caption>원전의 적용 조건과 편집상 검토사항</caption><tbody><tr><th scope="row">적용 조건</th><td>{selected.conditions}</td></tr><tr><th scope="row">한계 · 편집상 검토사항</th><td>{selected.limitations}</td></tr></tbody></table></div>
+        <StandardDetailSections key={selected.code} standard={selected} collection={collection}/>
+        <ReferenceSources sources={selected.sources || collection.sources}/>
         <div className="standard-paging">{index>0?<GuideLink go={go} to={to(collection.standards[index-1].code)}><ArrowLeft size={14}/><span><small>이전 표준해</small>{collection.standards[index-1].code}</span></GuideLink>:<span/>}{index<collection.standards.length-1?<GuideLink go={go} to={to(collection.standards[index+1].code)}><span><small>다음 표준해</small>{collection.standards[index+1].code}</span><ArrowRight size={14}/></GuideLink>:<span/>}</div>
       </>:<div className="standard-welcome"><Layers3 size={34}/><p className="eyebrow">FIVE CLASSES. SEVENTY-SIX DIRECTIONS.</p><h2>문제의 유형에서<br/>해결 방향으로.</h2><p>분류를 펼쳐 필요한 표준해를 찾아보세요.<br/>하나를 선택하면 원리와 적용 조건이 여기에 열립니다.</p><div className="standard-class-index">{branches.map(b=><button key={b.code} onClick={()=>{expand(b.code,true);tree.current?.focus({preventScroll:true});}}><b>{b.code}</b><span>{b.title}</span><ArrowRight size={15}/></button>)}</div></div>}
     </section>
