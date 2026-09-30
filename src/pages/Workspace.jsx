@@ -771,7 +771,7 @@ export function Solutions({ view, onPatent }) {
               <span className="pill">추가 검증 후보</span>
               <p>{a.how_it_differs}</p>
               <p>{a.validation_test}</p>
-              <SafeLink href={a.reference.url}>{a.reference.title} ↗</SafeLink>
+              <SafeLink href={a.reference.url} translate="no">{a.reference.title} ↗</SafeLink>
             </article>
           ))}
         </div>

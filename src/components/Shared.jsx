@@ -191,7 +191,7 @@ export function ReportSections({ sections = [] }) {
 export function ReferenceCard({ reference: r }) {
   return <article className="reference-card">
     {r.status && <p className="reference-status">{r.status}</p>}
-    <SafeLink className="reference-title" href={r.url}><span className="reference-kind">{r.kind}</span> {r.title} ↗</SafeLink>
+    <SafeLink className="reference-title" href={r.url} translate="no"><span className="reference-kind">{r.kind}</span> {r.title} ↗</SafeLink>
     {r.description && <p className="reference-description">{r.description}</p>}
     {(r.identifier || r.scope) && <p className="reference-meta">{[r.identifier, r.scope].filter(Boolean).join(" · ")}</p>}
   </article>;

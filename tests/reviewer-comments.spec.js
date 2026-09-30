@@ -6,9 +6,9 @@ test('private and sample cards keep totals and reveal unchanged references only 
     {role:'비용 및 자원 관리 검토자',comment:'기존 인력으로 시범 운영하되 반복 업무가 늘어나는지 먼저 확인해야 합니다.'},
   ];
   const references = [
-    {kind:'특허',title:'승인 권한 관리',url:'https://patents.google.com/patent/US1234567',
+    {kind:'특허',title:'High-Speed Operation Control Device',url:'https://patents.google.com/patent/US1234567',
       description:'권한의 경계와 책임을 명시하는 적용 방식입니다.',identifier:'US1234567',scope:'초록 확인',status:'적용 조건 검토'},
-    {kind:'논문',title:'조직 의사결정 연구',url:'https://doi.org/10.1000/example',
+    {kind:'논문',title:'Positioning Command Design to Minimize Residual Vibration and Positioning Time',url:'https://doi.org/10.1000/example',
       description:'조직의 의사결정 속도와 품질을 비교합니다.',identifier:'10.1000/example',scope:'실증 조건 확인 필요'},
   ];
   const view = {run_id:'comments-run',title:'권한 위임 개선',query:'승인 지연',status:'COMPLETED',stage_index:1,
@@ -55,6 +55,7 @@ test('private and sample cards keep totals and reveal unchanged references only 
         await expect(link).toBeVisible();
         await expect(link).toHaveAttribute('href',reference.url);
         await expect(link).toHaveAttribute('target','_blank');
+        await expect(link).toHaveAttribute('translate','no');
         await expect(disclosure.getByText(reference.description,{exact:true})).toBeVisible();
         await expect(disclosure).toContainText(reference.identifier);
         await expect(disclosure).toContainText(reference.scope);
