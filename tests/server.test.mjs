@@ -6,9 +6,21 @@ import { once } from "node:events";
 
 test("production gateway authenticates, streams API requests, and isolates internal routes", { timeout: 30000 }, async () => {
   let received;
+  let upstreamRequests = 0;
+  const publicFiles = new Map([
+    ["/googledb97084bf62cb561.html", ["text/html; charset=utf-8", "google-site-verification: googledb97084bf62cb561.html"]],
+    ["/robots.txt", ["text/plain; charset=utf-8", "User-agent: *\nAllow: /\nSitemap: https://trizstudio.online/sitemap.xml\n"]],
+    ["/sitemap.xml", ["application/xml", '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://trizstudio.online/</loc></url></urlset>']],
+  ]);
   const upstream = http.createServer(async (req, res) => {
     let body = ""; for await (const chunk of req) body += chunk;
     received = { url: req.url, headers: req.headers, body };
+    upstreamRequests++;
+    const publicFile = publicFiles.get(new URL(req.url, "http://localhost").pathname);
+    if (publicFile) {
+      res.writeHead(200, { "Content-Type": publicFile[0], "Content-Length": Buffer.byteLength(publicFile[1]) });
+      return res.end(publicFile[1]);
+    }
     res.writeHead(201, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ ok: true }));
   }).listen(0, "127.0.0.1");
@@ -36,7 +48,35 @@ test("production gateway authenticates, streams API requests, and isolates inter
     const base = `http://127.0.0.1:${port}`;
     const headers = { Cookie: "triz_session=fixture-session" };
     assert.equal((await fetch(base + "/healthz")).status, 200);
-    assert.equal((await fetch(base + "/api/runs")).status, 401);
+    for (const [path, [contentType, body]] of publicFiles) {
+      for (const method of ["GET", "HEAD"]) {
+        const response = await fetch(base + path + "?check=google", { method });
+        assert.equal(response.status, 200);
+        assert.equal(response.headers.get("content-type"), contentType);
+        assert.equal(response.headers.get("content-length"), String(Buffer.byteLength(body)));
+        assert.equal(await response.text(), method === "HEAD" ? "" : body);
+        assert.equal(received.url, path + "?check=google");
+        assert.equal(received.headers["x-triz-session"], undefined);
+      }
+      await fetch(base + path, { headers: { ...headers, Authorization: "Bearer spoofed", "X-TRIZ-SESSION": "spoofed-session" } });
+      assert.equal(received.headers.cookie, undefined);
+      assert.equal(received.headers.authorization, undefined);
+      assert.equal(received.headers["x-triz-session"], undefined);
+      const beforeWrite = upstreamRequests;
+      assert.equal((await fetch(base + path, { method: "POST" })).status, 405);
+      assert.equal(upstreamRequests, beforeWrite);
+    }
+    const beforeRejected = upstreamRequests;
+    for (const path of ["/google-other.html", "/googledb97084bf62cb561.html/extra", "/nested/robots.txt", "/robots.txt.bak", "/sitemap.xml/extra"]) {
+      for (const method of ["GET", "HEAD"]) {
+        await fetch(base + path, { method });
+        assert.equal(upstreamRequests, beforeRejected, `${method} ${path} must not reach the backend`);
+      }
+    }
+    for (const method of ["GET", "HEAD", "POST"]) {
+      assert.equal((await fetch(base + "/api/runs", { method })).status, 401);
+      assert.equal(upstreamRequests, beforeRejected);
+    }
     assert.equal((await fetch(base + "/api/public/runs")).status, 201);
     assert.equal((await fetch(base + "/api/public/runs", { method: "POST" })).status, 401);
     assert.equal((await fetch(base + "/")).status, 200);
