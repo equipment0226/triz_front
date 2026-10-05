@@ -33,6 +33,7 @@ import { History } from "./pages/History";
 import { Login } from "./pages/Account";
 import { CaseStudy } from "./pages/CaseStudy";
 import { Notifications } from './components/Notifications';
+import { ServiceNotice } from './components/ServiceNotice';
 import { useNavigation } from './lib/navigation';
 import {rememberPatentRoute,takePatentReturn,clearPatentReturn} from './lib/patentNavigation';
 import {canTestPatent} from './lib/patentAccess';
@@ -57,12 +58,21 @@ export default function App() {
   const [seed, setSeed] = useState(() => sessionStorage.getItem("triz-draft") || "");
   const [error, setError] = useState("");
   useEffect(() => {
-    const refresh = () => fetch("/auth/session").then(r => { if (!r.ok) throw new Error(); return r.json(); })
+    const refresh = event => {
+      if (Number.isFinite(event?.detail?.balance)) setAuth(current => current.user ? {
+        ...current, user: { ...current.user, ticket_balance: event.detail.balance }
+      } : current);
+      return fetch("/auth/session").then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(data => setAuth({ ...data, loading: false }))
-      .catch(() => setAuth({ loading: false, user: null, configured: false }));
+      .catch(() => setAuth(current => ({ ...current, loading: false })));
+    };
     refresh();
     window.addEventListener("triz-session-expired", refresh);
-    return () => window.removeEventListener("triz-session-expired", refresh);
+    window.addEventListener("triz-ticket-updated", refresh);
+    return () => {
+      window.removeEventListener("triz-session-expired", refresh);
+      window.removeEventListener("triz-ticket-updated", refresh);
+    };
   }, []);
   useEffect(()=>{
     if(auth.loading||!auth.user)return;
@@ -110,7 +120,7 @@ export default function App() {
             </button>
           ))}
         </nav>
-        {auth.user ? <div className="account-menu"><Notifications key={auth.user.id || auth.user.email || auth.user.name} user={auth.user} openRun={openRun}/><span>{auth.user.name}</span><button className="button subtle" onClick={logout}>로그아웃</button></div> :
+        {auth.user ? <div className="account-menu"><Notifications key={auth.user.id || auth.user.email || auth.user.name} user={auth.user} openRun={openRun}/><span>{auth.user.name}</span><span className="ticket-balance" aria-live="polite">Ticket {auth.user.ticket_balance ?? '—'}개</span><button className="button subtle" onClick={logout}>로그아웃</button></div> :
           <button className="button dark nav-cta" onClick={() => {if(page==='Patent (Test)')rememberPatentRoute(route);solve();}}>로그인 / 시작하기 <ArrowUpRight size={16} /></button>}
       </header>
       {error && (
@@ -137,6 +147,7 @@ export default function App() {
             onTabChange={changeTab}
             selected={selected}
             userId={auth.user.id || auth.user.email}
+            ticketBalance={auth.user.ticket_balance}
             seed={seed}
             onCreated={openRun}
             onError={setError}
@@ -155,7 +166,7 @@ export default function App() {
             <h1>About us</h1>
             <div className="profile-card">
               <img src="/profile.jpg" alt="Dae-Seong Ray Yang 프로필 사진" width="230" height="300" />
-              <div><p>Ideation : Dae-Seong Ray Yang</p><p>E-mail : <a href="mailto:equipment0226@gmail.com">equipment0226@gmail.com</a></p></div>
+              <div><p>소유자 : Dae-Seong Ray Yang</p><p>github : <a href="https://github.com/equipment0226/triz_backend" target="_blank" rel="noopener noreferrer">https://github.com/equipment0226/triz_backend</a></p><p>E-mail : <a href="mailto:equipment0226@gmail.com">equipment0226@gmail.com</a></p><p className="research-description">TRIZ + AI 접목 연구를 위해 논문 진행 중인 Theme으로, 참고 활용은 괜찮으나 무단 전재/복제/배포는 금지합니다.</p></div>
             </div>
           </div>
         )}
@@ -166,6 +177,7 @@ export default function App() {
         <span>모순에서 시작해, 가능성으로.</span>
         <span>TRIZ × AGENTIC AI</span>
       </footer>
+      <ServiceNotice />
     </>
   );
 }

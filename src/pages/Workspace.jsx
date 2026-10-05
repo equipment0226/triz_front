@@ -25,7 +25,7 @@ import {
   Send,
 } from "lucide-react";
 import { api, post } from "../lib/api";
-import { submitProblem } from '../lib/submission';
+import { submitProblem, canRetrySubmission } from '../lib/submission';
 import { continueWithRecovery } from '../lib/usageRecovery';
 import { SafeLink, Bot, Empty, ReportSections, ReferenceCard, TreeSpeech, Loading } from "../components/Shared";
 import { ProblemDefinition } from "../components/ProblemDefinition";
@@ -39,7 +39,7 @@ const statusLabel = {
   FAILED: "재시도 필요",
   INTERRUPTED: "일시 중단",
 };
-function Intake({ seed, onCreated, onError, userId }) {
+function Intake({ seed, onCreated, onError, userId, ticketBalance }) {
   const [query, setQuery] = useState(seed),
     [mode, setMode] = useState("FULL"),
     [files, setFiles] = useState([]),
@@ -47,9 +47,11 @@ function Intake({ seed, onCreated, onError, userId }) {
     [busy, setBusy] = useState(false);
   const fileRef = useRef();
   const submitting = useRef(false);
+  const depleted = Number.isFinite(ticketBalance) && ticketBalance < 1;
+  const retryPending = canRetrySubmission({ userId, query, mode, publicConsent, files });
   async function submit(e) {
     e.preventDefault();
-    if (submitting.current || !query.trim() || !publicConsent) return;
+    if (submitting.current || !query.trim() || !publicConsent || (depleted && !retryPending)) return;
     submitting.current = true;
     onError('');
     setBusy(true);
@@ -59,11 +61,13 @@ function Intake({ seed, onCreated, onError, userId }) {
       data.append("mode", mode);
       data.append("public_consent", String(publicConsent));
       files.forEach((f) => data.append("files", f));
-      const res = await submitProblem(data, userId);
+      const res = await submitProblem(data, userId, ticketBalance);
+      window.dispatchEvent(new CustomEvent('triz-ticket-updated', { detail: { balance: res.ticket_balance } }));
       onCreated(res.run_id);
       window.dispatchEvent(new Event('triz-run-updated'));
     } catch (e) {
       onError(e.message);
+      window.dispatchEvent(new CustomEvent('triz-ticket-updated', { detail: { balance: e.ticketBalance } }));
     } finally {
       submitting.current = false;
       setBusy(false);
@@ -173,8 +177,13 @@ function Intake({ seed, onCreated, onError, userId }) {
           <label className="public-consent"><input type="checkbox" required checked={publicConsent} onChange={e => setPublicConsent(e.target.checked)} />
             무료 베타에서 입력한 문제·자료의 분석 내용·해결안·보고서가 Sample Case를 통해 비회원에게도 공개되는 데 동의합니다.</label>
           <p className="muted">검토와 피드백은 내 프로젝트의 다음 분석 개선에 기본 반영됩니다.</p>
+          <div className={'ticket-notice' + (depleted ? ' depleted' : '')} role="status">
+            <strong>보유 Ticket {ticketBalance ?? '확인 중'}{ticketBalance == null ? '' : '개'}</strong>
+            <p>새 분석마다 Ticket 1개가 차감됩니다. 같은 분석의 추가 답변·재개에는 차감되지 않습니다.</p>
+            {depleted && <p>{retryPending ? '이전 접수 결과를 다시 확인할 수 있습니다. 같은 요청에는 티켓이 추가로 차감되지 않습니다.' : '사용 가능한 티켓이 없습니다. 기존 분석은 내 분석 이력에서 계속 확인할 수 있습니다.'}</p>}
+          </div>
           <button
-            disabled={busy || !query.trim() || !publicConsent}
+            disabled={busy || !query.trim() || !publicConsent || (depleted && !retryPending)}
             className="button dark full"
             type="submit"
           >
@@ -216,7 +225,7 @@ function Intake({ seed, onCreated, onError, userId }) {
   );
 }
 
-export function Workspace({ selected, seed, onCreated, onError, onPatent, userId, tab = "분석 현황", onTabChange: setTab }) {
+export function Workspace({ selected, seed, onCreated, onError, onPatent, userId, ticketBalance, tab = "분석 현황", onTabChange: setTab }) {
   const [view, setView] = useState(null),
     [busy, setBusy] = useState(false),
     [instruction, setInstruction] = useState(""),
@@ -272,7 +281,7 @@ export function Workspace({ selected, seed, onCreated, onError, onPatent, userId
     }
   }
   if (!selected)
-    return <Intake seed={seed} onCreated={onCreated} onError={onError} userId={userId} />;
+    return <Intake seed={seed} onCreated={onCreated} onError={onError} userId={userId} ticketBalance={ticketBalance} />;
   if (!view)
     return (
 <Loading />
