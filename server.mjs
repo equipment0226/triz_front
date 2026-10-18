@@ -4,7 +4,7 @@ import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { resolve, extname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { handleAuth, cookie, sessionCookie } from "./auth.mjs";
+import { handleAuth, cookie, sessionCookie, clearAuthCookies } from "./auth.mjs";
 
 const root = fileURLToPath(new URL("./dist/", import.meta.url));
 const backend = new URL(process.env.BACKEND_URL || "http://127.0.0.1:8000");
@@ -50,6 +50,8 @@ const server = http.createServer(async (req, res) => {
       const upstream = transport.request({ hostname: backend.hostname, port: backend.port || undefined,
         protocol: backend.protocol, method: req.method, path: pathname + new URL(req.url, "http://localhost").search,
         headers, timeout: 3600000 }, (response) => {
+        // Revoke the browser session and any pending OAuth flow only after deletion succeeds.
+        if (pathname === "/api/auth/account" && req.method === "DELETE" && response.statusCode >= 200 && response.statusCode < 300) clearAuthCookies(res);
         res.writeHead(response.statusCode || 502, { ...Object.fromEntries(Object.entries(response.headers).filter(([name]) => !hop.has(name))), "Cache-Control": "no-store" });
         response.pipe(res);
       });

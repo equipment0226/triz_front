@@ -19,6 +19,10 @@ export function cookie(req, name) {
 function setCookie(res, name, value, age) {
   res.setHeader("Set-Cookie", `${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${age}${secure ? "; Secure" : ""}`);
 }
+export function clearAuthCookies(res) {
+  res.setHeader("Set-Cookie", [sessionCookie, flowCookie].map(name =>
+    `${name}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure ? "; Secure" : ""}`));
+}
 function seal(data) { const s = Buffer.from(JSON.stringify(data)).toString("base64url"); return s + "." + sign(s); }
 function unseal(value) {
   const [s, signature] = value.split(".");
@@ -48,7 +52,7 @@ export async function handleAuth(req, res, backend, appToken) {
   if (url.pathname === "/auth/logout" && req.method === "POST") {
     const session = cookie(req, sessionCookie);
     if (session) await accountRequest(backend, appToken, "session", "DELETE", undefined, session);
-    setCookie(res, sessionCookie, "", 0); json(200, { ok: true }); return true;
+    clearAuthCookies(res); json(200, { ok: true }); return true;
   }
   if (req.method !== "GET") { json(405, { detail: "Method not allowed" }); return true; }
   if (url.pathname === "/auth/google") {

@@ -27,3 +27,9 @@ export const post = (path, body = {}) =>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+
+export const withdrawAccount = (confirmation) => api("/auth/account", {
+  method: "DELETE",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ confirmation }),
+});

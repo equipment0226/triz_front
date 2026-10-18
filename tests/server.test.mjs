@@ -6,6 +6,7 @@ import { once } from "node:events";
 
 test("production gateway authenticates, streams API requests, and isolates internal routes", { timeout: 30000 }, async () => {
   let received;
+  let upstreamStatus = 201;
   let upstreamRequests = 0;
   const publicFiles = new Map([
     ["/googledb97084bf62cb561.html", ["text/html; charset=utf-8", "google-site-verification: googledb97084bf62cb561.html"]],
@@ -14,14 +15,14 @@ test("production gateway authenticates, streams API requests, and isolates inter
   ]);
   const upstream = http.createServer(async (req, res) => {
     let body = ""; for await (const chunk of req) body += chunk;
-    received = { url: req.url, headers: req.headers, body };
+    received = { url: req.url, method: req.method, headers: req.headers, body };
     upstreamRequests++;
     const publicFile = publicFiles.get(new URL(req.url, "http://localhost").pathname);
     if (publicFile) {
       res.writeHead(200, { "Content-Type": publicFile[0], "Content-Length": Buffer.byteLength(publicFile[1]) });
       return res.end(publicFile[1]);
     }
-    res.writeHead(201, { "Content-Type": "application/json" });
+    res.writeHead(upstreamStatus, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ ok: true }));
   }).listen(0, "127.0.0.1");
   await once(upstream, "listening");
@@ -95,6 +96,28 @@ test("production gateway authenticates, streams API requests, and isolates inter
     assert.equal(received.headers["x-triz-user-id"], undefined);
     assert.equal(received.headers['idempotency-key'], 'submission-fixture');
     assert.equal((await fetch(base + "/api/runs", { method: "POST", headers: { ...headers, Origin: "https://untrusted.example" } })).status, 403);
+    assert.equal((await fetch(base + "/api/auth/account", { method: "DELETE" })).status, 401);
+    assert.equal((await fetch(base + "/api/auth/account", { method: "DELETE", headers: { ...headers, Origin: "https://untrusted.example" } })).status, 403);
+    assert.equal((await fetch(base + "/api/auth/account", { method: "DELETE", headers: { ...headers, "Sec-Fetch-Site": "cross-site" } })).status, 403);
+    const deletion = { method: "DELETE", headers: { ...headers, "Content-Type": "application/json", "X-TRIZ-SESSION": "spoofed-session" }, body: JSON.stringify({ confirmation: "회원탈퇴" }) };
+    upstreamStatus = 409;
+    const failedDeletion = await fetch(base + "/api/auth/account", deletion);
+    assert.equal(failedDeletion.status, 409);
+    assert.equal(failedDeletion.headers.get("set-cookie"), null);
+    upstreamStatus = 200;
+    const deleted = await fetch(base + "/api/auth/account", deletion);
+    assert.equal(deleted.status, 200);
+    assert.equal(received.url, "/api/auth/account");
+    assert.equal(received.method, "DELETE");
+    assert.deepEqual(JSON.parse(received.body), { confirmation: "회원탈퇴" });
+    assert.equal(received.headers["x-triz-session"], "fixture-session");
+    assert.equal(received.headers.cookie, undefined);
+    const expiredCookies = deleted.headers.getSetCookie();
+    assert.equal(expiredCookies.length, 2);
+    for (const name of ["triz_session", "triz_oauth"]) assert.ok(expiredCookies.some(value => value.startsWith(name + "=;") && value.includes("Max-Age=0") && value.includes("HttpOnly") && value.includes("SameSite=Lax")));
+    assert.equal(deleted.headers.get("cache-control"), "no-store");
+    assert.deepEqual(await (await fetch(base + "/auth/session")).json(), { user: null, configured: false });
+    upstreamStatus = 201;
     assert.equal((await fetch(base + "/internal/execute", { method: "POST", headers })).status, 405);
     assert.equal((await fetch(base + "/assets/missing.js", { headers })).status, 404);
   } finally {

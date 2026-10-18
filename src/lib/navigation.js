@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 
-const pages = {main:'Main',tool:'Introduction',solve:'Problem Solving',cases:'Sample Case',patent:'Patent (Test)',about:'About us'};
+const pages = {main:'Main',tool:'Introduction',solve:'Problem Solving',cases:'Sample Case',patent:'Patent (Test)',about:'About us',account:'Account'};
 const tabs = {analysis:'분석 현황',definition:'문제 정의',solutions:'해결안',report:'보고서',feedback:'피드백'};
 
 export function readRoute() {

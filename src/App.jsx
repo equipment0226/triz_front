@@ -30,7 +30,7 @@ const Introduction = lazy(() => import('./pages/Introduction'));
 const Patent = lazy(() => import('./pages/Patent'));
 import { Workspace } from "./pages/Workspace";
 import { History } from "./pages/History";
-import { Login } from "./pages/Account";
+import { Account, Login } from "./pages/Account";
 import { CaseStudy } from "./pages/CaseStudy";
 import { Notifications } from './components/Notifications';
 import { ServiceNotice } from './components/ServiceNotice';
@@ -38,6 +38,7 @@ import { useNavigation } from './lib/navigation';
 import {rememberPatentRoute,takePatentReturn,clearPatentReturn} from './lib/patentNavigation';
 import {canTestPatent} from './lib/patentAccess';
 import {clearSubmission} from './lib/submission';
+import {clearAccountStorage} from './lib/accountStorage';
 const nav = [
   "Main",
   "Introduction",
@@ -52,6 +53,8 @@ export default function App() {
   const selected = page === 'Problem Solving' ? run : null;
   const publicRun = page === 'Sample Case' ? run : null;
   const [auth, setAuth] = useState({ loading: true, user: null, configured: false });
+  const [accountDeleted, setAccountDeleted] = useState(false);
+  const authRequest = useRef(0);
   const goPage = page => {setError(''); navigate({page}, {scrollTop:true});};
   const changeTab = tab => navigate(r => ({...r,tab}));
   const listChange = (values, options) => navigate(r => ({...r,...values}), options);
@@ -59,12 +62,13 @@ export default function App() {
   const [error, setError] = useState("");
   useEffect(() => {
     const refresh = event => {
+      const request = ++authRequest.current;
       if (Number.isFinite(event?.detail?.balance)) setAuth(current => current.user ? {
         ...current, user: { ...current.user, ticket_balance: event.detail.balance }
       } : current);
       return fetch("/auth/session").then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then(data => setAuth({ ...data, loading: false }))
-      .catch(() => setAuth(current => ({ ...current, loading: false })));
+      .then(data => { if (request === authRequest.current) setAuth({ ...data, loading: false }); })
+      .catch(() => { if (request === authRequest.current) setAuth(current => ({ ...current, loading: false })); });
     };
     refresh();
     window.addEventListener("triz-session-expired", refresh);
@@ -83,10 +87,18 @@ export default function App() {
     try {
       const response = await fetch("/auth/logout", { method: "POST" });
       if (!response.ok) throw new Error("로그아웃하지 못했습니다. 다시 시도해 주세요.");
+      ++authRequest.current;
       setAuth(a => ({ ...a, user: null })); setSeed("");
       clearSubmission();
       sessionStorage.removeItem("triz-draft"); clearPatentReturn(); goPage("Main");
     } catch (e) { setError(e.message); }
+  }
+  function finishWithdrawal() {
+    ++authRequest.current;
+    clearAccountStorage();
+    setSeed(""); setError(""); setAccountDeleted(true);
+    setAuth(a => ({ ...a, loading: false, user: null }));
+    navigate({page:'Account'}, {replace:true,scrollTop:true});
   }
   function solve(query = "") {
     clearSubmission();
@@ -120,7 +132,7 @@ export default function App() {
             </button>
           ))}
         </nav>
-        {auth.user ? <div className="account-menu"><Notifications key={auth.user.id || auth.user.email || auth.user.name} user={auth.user} openRun={openRun}/><span>{auth.user.name}</span><span className="ticket-balance" aria-live="polite">Ticket {auth.user.ticket_balance ?? '—'}개</span><button className="button subtle" onClick={logout}>로그아웃</button></div> :
+        {auth.user ? <div className="account-menu"><Notifications key={auth.user.id || auth.user.email || auth.user.name} user={auth.user} openRun={openRun}/><span>{auth.user.name}</span><span className="ticket-balance" aria-live="polite">Ticket {auth.user.ticket_balance ?? '—'}개</span><button className="button subtle" onClick={() => goPage('Account')} aria-current={page === 'Account' ? 'page' : undefined}>계정 관리</button><button className="button subtle" onClick={logout}>로그아웃</button></div> :
           <button className="button dark nav-cta" onClick={() => {if(page==='Patent (Test)')rememberPatentRoute(route);solve();}}>로그인 / 시작하기 <ArrowUpRight size={16} /></button>}
       </header>
       {error && (
@@ -136,6 +148,8 @@ export default function App() {
           <Home solve={solve} learn={() => goPage("Introduction")} />
         ) : page === "Introduction" ? (
           <Suspense fallback={<Loading text="소개 자료를 불러오고 있어요." />}><Introduction solve={solve} route={route} onNavigate={navigate} /></Suspense>
+        ) : page === "Account" ? (
+          auth.loading ? <Loading text="로그인 상태를 확인하고 있어요." /> : <Account user={auth.user} completed={accountDeleted} onWithdrawn={finishWithdrawal} onHome={() => goPage('Main')} onLogin={() => {setAccountDeleted(false);solve();}} />
         ) : page === "Problem Solving" ? (
           auth.loading ? <Loading text="로그인 상태를 확인하고 있어요." /> : !auth.user ? <Login auth={auth} seed={seed} /> : <>
           <div className="workspace-nav"><button className="button subtle" onClick={() => solve()}>새 문제 분석</button>
